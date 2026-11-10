@@ -1,0 +1,1126 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>연말정산 포스터 메이커</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=DM+Mono:wght@400;500&family=DM+Sans:wght@500;700&family=Gowun+Dodum&family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=Inter+Tight:wght@500;600;700;800&family=Noto+Serif+KR:wght@400;700&family=Unbounded:wght@600;800&display=swap">
+<style>
+:root{--bg:#F5F4F0;--panel:#fff;--ink:#141414;--sub:#8a867e;--line:#E7E4DD;--soft:#F3F1EC;--acc:#E63B1F;--g:16px;--r:20px}
+*{box-sizing:border-box;margin:0}
+[hidden]{display:none!important}
+html,body{background:var(--bg);color:var(--ink);font-family:"Inter Tight","IBM Plex Sans KR",system-ui,-apple-system,sans-serif;-webkit-text-size-adjust:100%}
+button,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+
+.bar{position:sticky;top:0;z-index:20;background:rgba(245,244,240,.92);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.bar-in{display:flex;align-items:center;gap:var(--g);height:64px;padding:0 24px;max-width:1240px;margin:0 auto}
+.brand{display:flex;flex-direction:column;gap:2px;line-height:1}
+.brand b{font-weight:800;font-size:17px;letter-spacing:.02em}
+.brand b i{font-style:normal;color:var(--acc)}
+.brand span{font-size:11.5px;color:var(--sub)}
+.status{margin-left:auto;font-size:12px;color:var(--sub);white-space:nowrap;letter-spacing:.02em}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;height:44px;padding:0 22px;border:1px solid var(--ink);border-radius:999px;background:var(--ink);color:#fff;font-weight:700;font-size:13px;letter-spacing:.08em;white-space:nowrap;text-decoration:none}
+.btn:disabled{opacity:.5;cursor:default}
+.btn.ghost{background:#fff;color:var(--ink);border-color:var(--line)}
+.btn.sm{height:36px;padding:0 14px;font-size:12px;letter-spacing:.04em;font-weight:600}
+.btn.warn{background:#fff;color:#B4381F;border-color:#EBCDC5}
+
+.layout{display:grid;grid-template-columns:440px minmax(0,1fr);gap:24px;padding:24px;max-width:1240px;margin:0 auto;align-items:start}
+.editor{display:grid;grid-template-columns:minmax(0,1fr);gap:var(--g);min-width:0}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:24px;display:grid;grid-template-columns:minmax(0,1fr);gap:var(--g);min-width:0}
+.head{display:flex;align-items:baseline;gap:10px}
+.head em{font-style:normal;font-weight:800;font-size:12px;color:var(--acc);letter-spacing:.06em}
+.head h2{font-size:14px;font-weight:800;letter-spacing:.12em}
+.head span{margin-left:auto;font-size:12px;color:var(--sub);white-space:nowrap}
+
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:var(--g)}
+.grid3{display:grid;grid-template-columns:1fr 1fr 96px;gap:var(--g)}
+.field{display:grid;gap:8px;min-width:0}
+.field label{font-size:11px;font-weight:700;letter-spacing:.1em;display:flex;gap:6px;align-items:baseline}
+.field label small{font-size:11px;font-weight:500;letter-spacing:0;color:var(--sub)}
+input[type=text],textarea{width:100%;height:46px;border:1px solid var(--line);background:var(--soft);border-radius:12px;padding:0 14px;font-size:16px;outline:none;min-width:0}
+input[type=text]:focus,textarea:focus{border-color:var(--ink);background:#fff}
+textarea{height:160px;padding:12px 14px;resize:vertical;line-height:1.6}
+.note{font-size:12px;color:var(--sub);line-height:1.6}
+
+.themes{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.theme{display:grid;gap:10px;padding:8px 8px 12px;border:1px solid var(--line);border-radius:16px;background:#fff;text-align:left}
+.theme.on{border-color:var(--ink);box-shadow:0 0 0 1px var(--ink)}
+.sw{height:84px;border-radius:10px;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.sw.swiss{background:#EDE9E0;color:#111;font-family:"Anton",sans-serif;font-size:38px;justify-content:flex-start;padding-left:10px}
+.sw.swiss::after{content:"";position:absolute;right:10px;top:10px;width:22px;height:22px;border-radius:50%;background:#E63B1F}
+.sw.noir{background:#0D0D0D;color:#EFE7D6;font-family:"Instrument Serif",serif;font-style:italic;font-size:30px}
+.sw.noir::after{content:"";position:absolute;left:10px;right:10px;bottom:10px;height:3px;background:#D4F23A}
+.sw.pop{background:#FFB3DA;color:#FFE94A;font-family:"Unbounded",sans-serif;font-weight:800;font-size:23px;-webkit-text-stroke:5px #2B1B5A;paint-order:stroke fill;text-shadow:3px 3px 0 #2B1B5A;transform:none}
+.sw.pop::after{content:"";position:absolute;left:0;right:0;bottom:0;height:8px;background:repeating-linear-gradient(90deg,#FF5FA8 0 8px,#fff 8px 16px)}
+.theme b{font-size:12px;font-weight:800;letter-spacing:.1em;padding:0 4px}
+.theme small{font-size:11px;color:var(--sub);padding:0 4px;margin-top:-6px}
+
+.months{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+.mbtn{aspect-ratio:1;border:1px solid var(--line);border-radius:12px;background:var(--soft);display:grid;place-items:center;font-weight:800;font-size:15px;position:relative;overflow:hidden;padding:0;background-size:cover;background-position:center}
+.mbtn::after{content:"";position:absolute;left:50%;bottom:6px;width:5px;height:5px;margin-left:-2.5px;border-radius:50%;background:transparent}
+.mbtn.txt{background-color:#141414;color:#fff}
+.mbtn.txt::after,.mbtn.img::after{background:var(--acc)}
+.mbtn.img{color:#fff;text-shadow:0 1px 5px rgba(0,0,0,.8)}
+.mbtn.on{border-color:var(--acc);box-shadow:0 0 0 2px var(--acc)}
+
+.mhead{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;padding-top:var(--g);border-top:1px solid var(--line)}
+.mhead strong{font-size:22px;font-weight:800;letter-spacing:.02em}
+.mhead strong small{white-space:nowrap;font-size:12px;font-weight:500;color:var(--sub);margin-left:8px;letter-spacing:0}
+.seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;background:var(--soft);border-radius:999px;padding:4px;gap:2px}
+.seg button{height:34px;border:0;background:transparent;padding:0 14px;border-radius:999px;font-size:11.5px;font-weight:700;letter-spacing:.08em;color:var(--sub)}
+.seg button.on{background:var(--ink);color:#fff}
+.pane{display:grid;grid-template-columns:minmax(0,1fr);gap:var(--g)}
+.drop{height:132px;border:1.5px dashed #cfcac0;border-radius:14px;display:grid;place-items:center;text-align:center;color:var(--sub);font-size:13px;background:var(--soft);line-height:1.7;cursor:pointer}
+.drop b{display:block;color:var(--ink);font-size:12px;letter-spacing:.1em}
+.drop.over{border-color:var(--ink);background:#fff}
+.thumb{display:flex;gap:var(--g);align-items:center}
+.thumb img{width:88px;height:88px;object-fit:cover;border-radius:12px;border:1px solid var(--line);flex:none}
+.thumb div{display:flex;gap:8px;flex-wrap:wrap}
+.sliders{display:grid;gap:10px}
+.slider{display:grid;grid-template-columns:56px 1fr 44px;align-items:center;gap:12px;font-size:11px;font-weight:700;letter-spacing:.08em}
+.slider output{text-align:right;font-weight:500;color:var(--sub);font-variant-numeric:tabular-nums;letter-spacing:0;font-size:12px}
+input[type=range]{width:100%;accent-color:var(--ink)}
+.empty{font-size:13px;color:var(--sub);padding:16px;background:var(--soft);border-radius:12px;line-height:1.7}
+.mnav{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+
+.preview{position:sticky;top:88px;min-width:0;display:grid;gap:12px}
+.stage{background:#E4E1DA;border-radius:var(--r);padding:24px;display:flex;justify-content:center}
+.cvbox{width:100%;max-width:max(300px,calc((100vh - 200px) * 2 / 3))}
+canvas.poster{width:100%;height:auto;display:block;aspect-ratio:2/3;background:#ddd;box-shadow:0 14px 44px rgba(0,0,0,.2)}
+.pmeta{display:flex;justify-content:space-between;font-size:11.5px;color:var(--sub);letter-spacing:.06em;padding:0 4px}
+
+.dock{display:none}
+.modal{position:fixed;inset:0;background:rgba(15,14,13,.6);display:none;align-items:center;justify-content:center;z-index:50;padding:20px}
+.modal.on{display:flex}
+.box{background:#fff;border-radius:var(--r);padding:24px;max-width:440px;width:100%;max-height:92vh;overflow:auto;display:grid;gap:var(--g)}
+.box h3{font-size:14px;font-weight:800;letter-spacing:.1em}
+.box p{font-size:13.5px;color:var(--sub);line-height:1.65}
+.box img,.box canvas{width:100%;border-radius:4px;display:block;box-shadow:0 4px 18px rgba(0,0,0,.16)}
+.box .acts{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.toast{position:fixed;left:50%;bottom:100px;transform:translate(-50%,16px);background:var(--ink);color:#fff;padding:11px 18px;border-radius:999px;font-size:13px;opacity:0;transition:.25s;pointer-events:none;z-index:60;white-space:nowrap}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+
+@media (max-width:900px){
+  :root{--r:18px}
+  .bar-in{height:56px;padding:0 16px}
+  #saveDesk{display:none}
+  .layout{grid-template-columns:minmax(0,1fr);padding:16px 16px 104px;gap:var(--g)}
+  .preview{position:static;order:-1}
+  .stage{padding:16px}
+  .cvbox{max-width:none}
+  .card{padding:20px}
+  .grid3{grid-template-columns:1fr 1fr}
+  .grid3 .field:first-child{grid-column:1 / -1}
+  .dock{display:grid;grid-template-columns:1fr 1.4fr;gap:8px;position:fixed;left:0;right:0;bottom:0;padding:12px 16px calc(12px + env(safe-area-inset-bottom));background:rgba(245,244,240,.95);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border-top:1px solid var(--line);z-index:20}
+  .dock .btn{height:50px}
+}
+</style>
+</head>
+<body>
+<header class="bar"><div class="bar-in">
+  <div class="brand"><b>YEAR<i>—</i>END POSTER</b><span>연말정산 포스터 메이커</span></div>
+  <div class="status" id="status">LOADING…</div>
+  <button class="btn" id="saveDesk">SAVE PNG</button>
+</div></header>
+
+<main class="layout">
+  <section class="editor">
+    <div class="card">
+      <div class="head"><em>01</em><h2>INFO</h2><span>기본 정보</span></div>
+      <div class="grid3">
+        <div class="field"><label for="fName">NAME <small>누구의</small></label><input type="text" id="fName" data-k="name" placeholder="이름" maxlength="30"></div>
+        <div class="field"><label for="fSubject">SUBJECT <small>어떤</small></label><input type="text" id="fSubject" data-k="subject" placeholder="그림, 글…" maxlength="30"></div>
+        <div class="field"><label for="fYear">YEAR</label><input type="text" id="fYear" data-k="year" inputmode="numeric" maxlength="4"></div>
+      </div>
+      <div class="field"><label for="fHeadline">HEADLINE <small>큰 영문 제목</small></label><input type="text" id="fHeadline" data-k="headline" placeholder="YEAR IN REVIEW" maxlength="28"></div>
+      <div class="field"><label for="fComment">COMMENT <small>한 줄 소감</small></label><input type="text" id="fComment" data-k="comment" placeholder="올해를 한 줄로 정리한다면" maxlength="80"></div>
+      <div class="field"><label for="fFooter">CREDIT <small>계정, 해시태그</small></label><input type="text" id="fFooter" data-k="footer" placeholder="@account" maxlength="50"></div>
+      <p class="note" id="titlePreview"></p>
+    </div>
+
+    <div class="card">
+      <div class="head"><em>02</em><h2>THEME</h2><span>테마</span></div>
+      <div class="themes">
+        <button class="theme" data-theme="swiss"><div class="sw swiss">2026</div><b>SWISS</b><small>볼드 타이포 포스터</small></button>
+        <button class="theme" data-theme="noir"><div class="sw noir">Review</div><b>NOIR</b><small>블랙 필름 시트</small></button>
+        <button class="theme" data-theme="pop"><div class="sw pop">2026</div><b>POP</b><small>키치 스티커</small></button>
+      </div>
+    </div>
+
+    <div class="card" id="monthCard">
+      <div class="head"><em>03</em><h2>MONTHS</h2><span>칸마다 그림 또는 글</span></div>
+      <div class="months" id="months"></div>
+
+      <div class="mhead">
+        <strong id="mLabel"></strong>
+        <div class="seg" id="mType"><button data-type="empty">EMPTY</button><button data-type="image">IMAGE</button><button data-type="text">TEXT</button></div>
+      </div>
+
+      <div class="pane" id="paneEmpty"><p class="empty">비어 있는 칸이에요. 포스터에는 월 숫자 장식으로 들어가요.<br>IMAGE나 TEXT를 골라 채워 주세요.</p></div>
+
+      <div class="pane" id="paneImage" hidden>
+        <div class="drop" id="drop"><div><b>ADD IMAGE</b>눌러서 고르거나 끌어다 놓기</div></div>
+        <div class="thumb" id="thumb" hidden>
+          <img id="thumbImg" alt="">
+          <div><button class="btn ghost sm" id="imgChange">REPLACE</button><button class="btn warn sm" id="imgDel">REMOVE</button></div>
+        </div>
+        <div class="sliders" id="imgCtrls" hidden>
+          <div class="slider"><span>ZOOM</span><input type="range" id="sZoom" min="100" max="300" step="1"><output id="oZoom"></output></div>
+          <div class="slider"><span>X</span><input type="range" id="sPx" min="0" max="100" step="1"><output id="oPx"></output></div>
+          <div class="slider"><span>Y</span><input type="range" id="sPy" min="0" max="100" step="1"><output id="oPy"></output></div>
+        </div>
+        <div class="field"><label for="mCaption">CAPTION <small>작품 제목 (선택)</small></label><input type="text" id="mCaption" placeholder="칸 아래에 작게 들어가요" maxlength="40"></div>
+      </div>
+
+      <div class="pane" id="paneText" hidden>
+        <div class="field"><label for="mTitle">TITLE <small>제목</small></label><input type="text" id="mTitle" placeholder="글 제목" maxlength="40"></div>
+        <div class="field"><label for="mBody">BODY <small>본문</small></label><textarea id="mBody" placeholder="문장이나 발췌를 적어 주세요. 줄바꿈도 그대로 들어가요."></textarea></div>
+        <p class="note">칸에 맞춰 글자 크기가 자동으로 줄어요. 그래도 길면 끝이 …으로 잘려요.</p>
+      </div>
+
+      <div class="mnav">
+        <button class="btn ghost sm" id="mPrev">← PREV</button>
+        <button class="btn ghost sm" id="mClear">CLEAR</button>
+        <button class="btn ghost sm" id="mNext">NEXT →</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="head"><em>04</em><h2>DATA</h2><span>저장</span></div>
+      <p class="note">입력한 내용과 사진은 이 브라우저에 자동 저장돼요. 다른 기기나 브라우저에서는 보이지 않아요.</p>
+      <div><button class="btn warn sm" id="resetAll">RESET ALL</button></div>
+    </div>
+  </section>
+
+  <section class="preview">
+    <div class="stage"><div class="cvbox" id="cvBox"><canvas class="poster" id="cv" width="600" height="900"></canvas></div></div>
+    <div class="pmeta"><span>2400 × 3600 PX</span><span id="countLabel"></span></div>
+  </section>
+</main>
+
+<div class="dock"><button class="btn ghost" id="pvOpen">PREVIEW</button><button class="btn" id="saveMob">SAVE PNG</button></div>
+<input type="file" id="file" accept="image/*" hidden>
+
+<div class="modal" id="confirmModal"><div class="box">
+  <h3 id="cTitle"></h3><p id="cMsg"></p>
+  <div class="acts"><button class="btn ghost sm" id="cNo">CANCEL</button><button class="btn sm" id="cYes">OK</button></div>
+</div></div>
+
+<div class="modal" id="pvModal"><div class="box">
+  <canvas class="poster" id="cv2" width="600" height="900"></canvas>
+  <div class="acts"><button class="btn ghost sm" id="pvClose">CLOSE</button></div>
+</div></div>
+
+<div class="modal" id="imgModal"><div class="box">
+  <h3>POSTER READY</h3>
+  <p>모바일에서는 이미지를 길게 눌러 저장하고, PC에서는 아래 버튼이나 우클릭으로 저장하세요.</p>
+  <img id="outImg" alt="완성된 연말정산 포스터">
+  <div class="acts"><button class="btn ghost sm" id="outClose">CLOSE</button><a class="btn sm" id="outLink" download="poster.png">DOWNLOAD</a></div>
+</div></div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(() => {
+'use strict';
+const W = 1200, H = 1800, EXPORT_SCALE = 2;
+const MON = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+const MONTH = ['JANUARY','FEBRUARY','MARCH','APRIL','MAY','JUNE','JULY','AUGUST','SEPTEMBER','OCTOBER','NOVEMBER','DECEMBER'];
+const PASTEL = ['#FFC2D4','#FFD3B5','#FFE7A3','#DDF3AE','#B5EBD4','#ADE3F2','#B8CFFF','#CDC2FF','#E5C2FF','#FFC2EC','#FFCFDD','#CFDCFF'];
+const F = {
+  anton: '"Anton", "IBM Plex Sans KR", sans-serif',
+  inter: '"Inter Tight", "IBM Plex Sans KR", sans-serif',
+  plex: '"IBM Plex Sans KR", sans-serif',
+  inst: '"Instrument Serif", "Noto Serif KR", serif',
+  serif: '"Noto Serif KR", serif',
+  mono: '"DM Mono", "IBM Plex Sans KR", monospace',
+  unb: '"Unbounded", "IBM Plex Sans KR", sans-serif',
+  dm: '"DM Sans", "IBM Plex Sans KR", sans-serif',
+  gowun: '"Gowun Dodum", "IBM Plex Sans KR", sans-serif'
+};
+const $ = s => document.querySelector(s);
+const pad2 = n => String(n).padStart(2, '0');
+const defMonth = () => ({ type: 'empty', title: '', body: '', zoom: 1, px: 50, py: 50 });
+const defState = () => ({ name: '', subject: '', year: String(new Date().getFullYear()), headline: '', comment: '', footer: '', theme: 'swiss', cur: 0, months: Array.from({ length: 12 }, defMonth) });
+const OLD_THEME = { gallery: 'swiss', cinema: 'noir', pastel: 'pop' };
+
+let state = defState();
+const imgs = new Array(12).fill(null); // { blob, url, el }
+let SC = 1;
+
+/* ---------- 저장소 (IndexedDB, 실패 시 localStorage/메모리) ---------- */
+const store = {
+  db: null, ok: false, mem: new Map(),
+  async open() {
+    try {
+      if (!window.indexedDB) throw new Error('no idb');
+      this.db = await Promise.race([
+        new Promise((res, rej) => {
+          const r = indexedDB.open('yearend-poster', 1);
+          r.onupgradeneeded = () => r.result.createObjectStore('kv');
+          r.onsuccess = () => res(r.result);
+          r.onerror = () => rej(r.error);
+          r.onblocked = () => rej(new Error('blocked'));
+        }),
+        new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 2500))
+      ]);
+      this.ok = true;
+    } catch (e) { this.ok = false; }
+  },
+  get(k) {
+    if (!this.ok) {
+      if (this.mem.has(k)) return Promise.resolve(this.mem.get(k));
+      try { const v = localStorage.getItem('yep-' + k); return Promise.resolve(v == null ? undefined : v); } catch (e) { return Promise.resolve(undefined); }
+    }
+    return new Promise(res => {
+      try { const q = this.db.transaction('kv').objectStore('kv').get(k); q.onsuccess = () => res(q.result); q.onerror = () => res(undefined); }
+      catch (e) { res(undefined); }
+    });
+  },
+  set(k, v) {
+    if (!this.ok) {
+      this.mem.set(k, v);
+      if (typeof v !== 'string') return Promise.resolve(false);
+      try { localStorage.setItem('yep-' + k, v); return Promise.resolve(true); } catch (e) { return Promise.resolve(false); }
+    }
+    return new Promise(res => {
+      try { const t = this.db.transaction('kv', 'readwrite'); t.objectStore('kv').put(v, k); t.oncomplete = () => res(true); t.onerror = () => res(false); t.onabort = () => res(false); }
+      catch (e) { res(false); }
+    });
+  },
+  del(k) {
+    if (!this.ok) { this.mem.delete(k); try { localStorage.removeItem('yep-' + k); } catch (e) {} return Promise.resolve(true); }
+    return new Promise(res => {
+      try { const t = this.db.transaction('kv', 'readwrite'); t.objectStore('kv').delete(k); t.oncomplete = () => res(true); t.onerror = () => res(false); }
+      catch (e) { res(false); }
+    });
+  }
+};
+
+const statusEl = $('#status');
+function setStatus(t) { statusEl.textContent = t; }
+const SAVED = 'AUTOSAVED ✓', UNSAVED = '저장이 안 되는 환경이에요';
+let saveTimer = 0;
+function scheduleSave() {
+  setStatus('SAVING…');
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(async () => {
+    const ok = await store.set('state', JSON.stringify(state));
+    setStatus(ok ? SAVED : UNSAVED);
+  }, 400);
+}
+
+function loadImage(url) {
+  return new Promise((res, rej) => { const el = new Image(); el.onload = () => res(el); el.onerror = rej; el.src = url; });
+}
+async function makeImg(blob) {
+  const url = URL.createObjectURL(blob);
+  const el = await loadImage(url);
+  return { blob, url, el };
+}
+function freeImg(i) { if (imgs[i]) { try { URL.revokeObjectURL(imgs[i].url); } catch (e) {} imgs[i] = null; } }
+
+async function loadAll() {
+  await store.open();
+  const raw = await store.get('state');
+  if (raw) {
+    try {
+      const s = typeof raw === 'string' ? JSON.parse(raw) : raw;
+      const base = defState();
+      for (const k of ['name', 'subject', 'year', 'headline', 'comment', 'footer']) if (typeof s[k] === 'string') base[k] = s[k];
+      const th = OLD_THEME[s.theme] || s.theme;
+      if (THEMES[th]) base.theme = th;
+      if (Number.isInteger(s.cur) && s.cur >= 0 && s.cur < 12) base.cur = s.cur;
+      if (Array.isArray(s.months)) base.months = base.months.map((d, i) => Object.assign(d, s.months[i] || {}));
+      state = base;
+    } catch (e) {}
+  }
+  for (let i = 0; i < 12; i++) {
+    const b = await store.get('img' + i);
+    if (b instanceof Blob) { try { imgs[i] = await makeImg(b); } catch (e) {} }
+  }
+  setStatus(store.ok ? SAVED : UNSAVED);
+}
+
+/* ---------- 그리기 도우미 ---------- */
+function yr() { return state.year.trim() || String(new Date().getFullYear()); }
+function nameText() { return state.name.trim() || 'YOUR NAME'; }
+function titleText() {
+  const n = state.name.trim() || '이름', s = state.subject.trim(), y = state.year.trim();
+  return `${n}의 ${y ? y + ' ' : ''}${s ? s + ' ' : ''}연말정산`;
+}
+function headText(def) { return state.headline.trim() || def; }
+function cellOf(i) {
+  const m = state.months[i];
+  if (m.type === 'image' && imgs[i]) return { kind: 'image', m, img: imgs[i].el };
+  if (m.type === 'text' && (m.title.trim() || m.body.trim())) return { kind: 'text', m };
+  return { kind: 'empty', m };
+}
+function count() { let n = 0; for (let i = 0; i < 12; i++) if (cellOf(i).kind !== 'empty') n++; return n; }
+
+function rr(ctx, x, y, w, h, r) {
+  r = Math.max(0, Math.min(r, w / 2, h / 2));
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+function shadow(ctx, color, blur, oy) { ctx.shadowColor = color; ctx.shadowBlur = blur * SC; ctx.shadowOffsetX = 0; ctx.shadowOffsetY = oy * SC; }
+function noShadow(ctx) { ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0; ctx.shadowOffsetY = 0; }
+function hline(ctx, x1, y, x2, w, color) { ctx.save(); ctx.strokeStyle = color; ctx.lineWidth = w; ctx.beginPath(); ctx.moveTo(x1, y); ctx.lineTo(x2, y); ctx.stroke(); ctx.restore(); }
+function spacedWidth(ctx, text, sp) {
+  const chars = Array.from(text);
+  return chars.reduce((a, c) => a + ctx.measureText(c).width, 0) + sp * Math.max(0, chars.length - 1);
+}
+function spaced(ctx, text, x, y, sp, align) {
+  const chars = Array.from(text);
+  const ws = chars.map(c => ctx.measureText(c).width);
+  const total = ws.reduce((a, b) => a + b, 0) + sp * Math.max(0, chars.length - 1);
+  let sx = align === 'center' ? x - total / 2 : align === 'right' ? x - total : x;
+  const prev = ctx.textAlign; ctx.textAlign = 'left';
+  chars.forEach((c, i) => { ctx.fillText(c, sx, y); sx += ws[i] + sp; });
+  ctx.textAlign = prev;
+  return total;
+}
+function ellipsize(ctx, t, maxW) {
+  t = String(t);
+  if (maxW <= 0) return '';
+  if (ctx.measureText(t).width <= maxW) return t;
+  const s = Array.from(t);
+  while (s.length && ctx.measureText(s.join('') + '…').width > maxW) s.pop();
+  return s.length ? s.join('') + '…' : '';
+}
+function forceEllipsis(ctx, t, maxW) {
+  const s = Array.from(String(t).replace(/\s+$/, ''));
+  while (s.length && ctx.measureText(s.join('') + '…').width > maxW) s.pop();
+  return s.join('') + '…';
+}
+function fitFont(ctx, text, maxW, f, start, min) {
+  let s = start; ctx.font = f(s);
+  while (s > min && ctx.measureText(text).width > maxW) { s -= 1; ctx.font = f(s); }
+  return s;
+}
+// 큰 숫자·제목용: 너비와 글자 높이 둘 다에 맞춤
+function fitDisplay(ctx, text, f, maxW, maxH, start) {
+  let s = start;
+  for (;;) {
+    ctx.font = f(s);
+    const m = ctx.measureText(text);
+    const asc = m.actualBoundingBoxAscent || s * 0.75;
+    if ((m.width <= maxW && asc <= maxH) || s <= 40) return { s, w: m.width, asc };
+    s -= 4;
+  }
+}
+function wrap(ctx, text, maxW) {
+  const out = [];
+  for (const para of String(text).replace(/\r/g, '').split('\n')) {
+    if (para.trim() === '') { out.push(''); continue; }
+    let line = '';
+    for (const w of para.split(' ')) {
+      const test = line ? line + ' ' + w : w;
+      if (ctx.measureText(test).width <= maxW) { line = test; continue; }
+      if (line) { out.push(line); line = ''; }
+      if (ctx.measureText(w).width <= maxW) { line = w; continue; }
+      let chunk = '';
+      for (const ch of Array.from(w)) {
+        if (chunk && ctx.measureText(chunk + ch).width > maxW) { out.push(chunk); chunk = ch; }
+        else chunk += ch;
+      }
+      line = chunk;
+    }
+    out.push(line);
+  }
+  return out;
+}
+// 글 칸: 칸에 맞게 글자 크기를 줄이고, 그래도 넘치면 말줄임
+function textCell(ctx, r, m, o) {
+  const title = m.title.trim(), body = m.body.replace(/\s+$/, '').replace(/^\s*\n/, '');
+  const pt = o.padTop ?? o.pad;
+  const x = r.x + o.pad, y = r.y + pt, w = r.w - o.pad * 2, h = r.h - pt - o.pad;
+  let tL = [], bL = [], ts = 0, bs = 0, gap = 0, th = 0, bh = 0;
+  for (let s = 1; s >= 0.499; s -= 0.05) {
+    ts = o.tSize * s; bs = o.bSize * s; gap = title && body ? Math.round(bs * 0.9) : 0;
+    ctx.font = o.tFont(ts);
+    tL = title ? wrap(ctx, title, w) : [];
+    if (tL.length > 2) { tL = tL.slice(0, 2); tL[1] = forceEllipsis(ctx, tL[1], w); }
+    ctx.font = o.bFont(bs);
+    bL = body ? wrap(ctx, body, w) : [];
+    th = tL.length * ts * 1.3; bh = bL.length * bs * o.lh;
+    if (th + gap + bh <= h) break;
+  }
+  if (th + gap + bh > h) {
+    const maxB = Math.max(0, Math.floor((h - th - gap) / (bs * o.lh)));
+    ctx.font = o.bFont(bs);
+    bL = bL.slice(0, maxB);
+    if (maxB > 0) bL[maxB - 1] = forceEllipsis(ctx, bL[maxB - 1], w);
+    if (!bL.length) gap = 0;
+    bh = bL.length * bs * o.lh;
+  }
+  const total = th + gap + bh;
+  let cy = o.valign === 'middle' ? y + Math.max(0, (h - total) / 2) : y;
+  const tx = o.align === 'center' ? r.x + r.w / 2 : x;
+  ctx.save();
+  ctx.textAlign = o.align === 'center' ? 'center' : 'left';
+  ctx.textBaseline = 'middle';
+  ctx.font = o.tFont(ts); ctx.fillStyle = o.tColor;
+  tL.forEach((l, i) => ctx.fillText(l, tx, cy + ts * 1.3 * (i + 0.5)));
+  cy += th + gap;
+  ctx.font = o.bFont(bs); ctx.fillStyle = o.bColor;
+  bL.forEach((l, i) => ctx.fillText(l, tx, cy + bs * o.lh * (i + 0.5)));
+  ctx.restore();
+}
+function drawCover(ctx, img, x, y, w, h, m, radius) {
+  const iw = img.naturalWidth || img.width, ih = img.naturalHeight || img.height;
+  if (!iw || !ih) return;
+  ctx.save();
+  if (radius) rr(ctx, x, y, w, h, radius); else { ctx.beginPath(); ctx.rect(x, y, w, h); }
+  ctx.clip();
+  const s = Math.max(w / iw, h / ih) * (m.zoom || 1);
+  const dw = iw * s, dh = ih * s;
+  ctx.drawImage(img, x - (dw - w) * (m.px / 100), y - (dh - h) * (m.py / 100), dw, dh);
+  ctx.restore();
+}
+let grainCanvas = null;
+function grain(ctx, alpha) {
+  try {
+    if (!grainCanvas) {
+      const c = document.createElement('canvas'); c.width = c.height = 180;
+      const g = c.getContext('2d'); const d = g.createImageData(180, 180);
+      for (let i = 0; i < d.data.length; i += 4) { const v = (Math.random() * 255) | 0; d.data[i] = d.data[i + 1] = d.data[i + 2] = v; d.data[i + 3] = 255; }
+      g.putImageData(d, 0, 0); grainCanvas = c;
+    }
+    ctx.save(); ctx.globalAlpha = alpha; ctx.globalCompositeOperation = 'overlay';
+    ctx.fillStyle = ctx.createPattern(grainCanvas, 'repeat'); ctx.fillRect(0, 0, W, H);
+    ctx.restore();
+  } catch (e) { try { ctx.restore(); } catch (e2) {} }
+}
+function star(ctx, x, y, r, color, glow) {
+  ctx.save(); ctx.translate(x, y);
+  ctx.beginPath();
+  ctx.moveTo(0, -r);
+  ctx.quadraticCurveTo(0, 0, r, 0);
+  ctx.quadraticCurveTo(0, 0, 0, r);
+  ctx.quadraticCurveTo(0, 0, -r, 0);
+  ctx.quadraticCurveTo(0, 0, 0, -r);
+  ctx.closePath();
+  if (glow) shadow(ctx, glow, r * 1.2, 0);
+  ctx.fillStyle = color; ctx.fill();
+  ctx.restore();
+}
+function pill(ctx, x, cy, text, font, fill, color, align, padX, h, stroke) {
+  ctx.save(); ctx.font = font;
+  const tw = ctx.measureText(text).width, w = tw + padX * 2;
+  const x0 = align === 'center' ? x - w / 2 : align === 'right' ? x - w : x;
+  rr(ctx, x0, cy - h / 2, w, h, h / 2); ctx.fillStyle = fill; ctx.fill();
+  if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = 1.5; ctx.stroke(); }
+  ctx.fillStyle = color; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(text, x0 + w / 2, cy + 1);
+  ctx.restore();
+  return w;
+}
+function blob(ctx, x, y, r, rgb, a) {
+  const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+  g.addColorStop(0, `rgba(${rgb},${a})`); g.addColorStop(1, `rgba(${rgb},0)`);
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+}
+
+/* ---------- 테마 1: SWISS ---------- */
+function drawSwiss(ctx) {
+  const ink = '#111111', acc = '#E63B1F', paper = '#EDE9E0', M = 72, IW = W - M * 2;
+  ctx.fillStyle = paper; ctx.fillRect(0, 0, W, H);
+  grain(ctx, 0.08);
+  ctx.textBaseline = 'alphabetic'; ctx.fillStyle = ink;
+  ctx.font = `700 17px ${F.inter}`;
+  spaced(ctx, 'ANNUAL REVIEW', M, 92, 3, 'left');
+  spaced(ctx, 'JAN — DEC', W / 2, 92, 3, 'center');
+  spaced(ctx, 'VOL. ' + yr(), W - M, 92, 3, 'right');
+  hline(ctx, M, 114, W - M, 4, ink);
+
+  // 큰 연도
+  const d = fitDisplay(ctx, yr(), s => `${s}px ${F.anton}`, IW - 240, 310, 480);
+  ctx.textAlign = 'left'; ctx.fillStyle = ink;
+  ctx.fillText(yr(), M - 4, 146 + d.asc);
+  // 빨간 원 스티커
+  const cx = W - M - 104, cy = 300;
+  ctx.beginPath(); ctx.arc(cx, cy, 104, 0, Math.PI * 2); ctx.fillStyle = acc; ctx.fill();
+  ctx.save(); ctx.fillStyle = paper; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.font = `92px ${F.anton}`; ctx.fillText(pad2(count()), cx, cy - 10);
+  ctx.font = `700 14px ${F.inter}`; ctx.textBaseline = 'alphabetic';
+  spaced(ctx, 'OF 12 MONTHS', cx, cy + 62, 2.5, 'center');
+  ctx.restore();
+
+  // 헤드라인 + 한글 제목
+  const hd = headText('YEAR IN REVIEW').toUpperCase();
+  ctx.fillStyle = acc; ctx.textAlign = 'left';
+  fitFont(ctx, hd, IW * 0.62, s => `800 ${s}px ${F.inter}`, 52, 24);
+  ctx.fillText(hd, M, 528);
+  const hw = ctx.measureText(hd).width;
+  ctx.fillStyle = ink; ctx.textAlign = 'right'; ctx.font = `600 24px ${F.plex}`;
+  ctx.fillText(ellipsize(ctx, titleText(), IW - hw - 36), W - M, 528);
+  if (state.comment.trim()) {
+    ctx.textAlign = 'left'; ctx.font = `400 20px ${F.plex}`; ctx.fillStyle = '#5c574e';
+    ctx.fillText(ellipsize(ctx, state.comment.trim(), IW), M, 566);
+  }
+  hline(ctx, M, 592, W - M, 1.5, ink);
+
+  // 4 × 3 격자
+  const top = 614, bottom = 1664, gap = 18, labelH = 40;
+  const cw = (IW - gap * 3) / 4, rh = (bottom - top - gap * 2) / 3, fh = rh - labelH;
+  for (let i = 0; i < 12; i++) {
+    const c = i % 4, r = Math.floor(i / 4), x = M + c * (cw + gap), y = top + r * (rh + gap);
+    const cell = cellOf(i);
+    if (cell.kind === 'image') {
+      drawCover(ctx, cell.img, x, y, cw, fh, cell.m, 0);
+    } else if (cell.kind === 'text') {
+      ctx.fillStyle = ink; ctx.fillRect(x, y, cw, fh);
+      ctx.fillStyle = acc; ctx.fillRect(x + 20, y + 22, 30, 5);
+      textCell(ctx, { x, y, w: cw, h: fh }, cell.m, { pad: 20, padTop: 46, align: 'left', valign: 'top', tSize: 23, bSize: 15, lh: 1.62, tFont: s => `700 ${s}px ${F.plex}`, bFont: s => `400 ${s}px ${F.plex}`, tColor: '#F3EFE6', bColor: '#cbc5b9' });
+    } else {
+      ctx.fillStyle = '#E0DACD'; ctx.fillRect(x, y, cw, fh);
+      ctx.save(); ctx.font = `150px ${F.anton}`; ctx.fillStyle = '#CFC7B6'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(pad2(i + 1), x + cw / 2, y + fh / 2 + 8); ctx.restore();
+    }
+    const ly = y + fh + 28;
+    ctx.textAlign = 'left'; ctx.fillStyle = acc; ctx.font = `22px ${F.anton}`;
+    ctx.fillText(pad2(i + 1), x, ly);
+    ctx.fillStyle = ink; ctx.font = `700 13px ${F.inter}`;
+    const hasCap = cell.kind === 'image' && cell.m.title.trim();
+    const mw = spaced(ctx, hasCap ? MON[i] : MONTH[i], x + 32, ly - 1, 1.5, 'left');
+    if (hasCap) {
+      ctx.textAlign = 'right'; ctx.font = `500 14px ${F.plex}`; ctx.fillStyle = '#55504a';
+      ctx.fillText(ellipsize(ctx, cell.m.title.trim(), cw - 32 - mw - 14), x + cw, ly - 1);
+    }
+  }
+
+  hline(ctx, M, 1692, W - M, 4, ink);
+  ctx.fillStyle = ink; ctx.textAlign = 'left'; ctx.font = `700 24px ${F.plex}`;
+  ctx.fillText(ellipsize(ctx, nameText(), 360), M, 1740);
+  ctx.font = `700 14px ${F.inter}`;
+  spaced(ctx, `YEAR-END REVIEW ${yr()}`, W / 2, 1738, 3, 'center');
+  if (state.footer.trim()) {
+    ctx.textAlign = 'right'; ctx.font = `500 20px ${F.plex}`;
+    ctx.fillText(ellipsize(ctx, state.footer.trim(), 360), W - M, 1740);
+  } else {
+    ctx.fillStyle = acc; ctx.fillRect(W - M - 44, 1722, 44, 22);
+  }
+}
+
+/* ---------- 테마 2: NOIR ---------- */
+function drawNoir(ctx) {
+  const cream = '#EFE7D6', lime = '#D4F23A', mute = '#8d887d', SX = 60, SW = 1080;
+  ctx.fillStyle = '#0D0D0D'; ctx.fillRect(0, 0, W, H);
+  ctx.textBaseline = 'alphabetic';
+  ctx.fillStyle = lime; ctx.font = `500 15px ${F.mono}`;
+  spaced(ctx, 'REEL ' + yr(), SX, 86, 3, 'left');
+  spaced(ctx, 'A YEAR IN TWELVE FRAMES', W / 2, 86, 3, 'center');
+  spaced(ctx, `${pad2(count())} / 12 EXPOSED`, SX + SW, 86, 3, 'right');
+  hline(ctx, SX, 108, SX + SW, 1, 'rgba(239,231,214,.25)');
+
+  // 헤드라인(이탤릭 세리프) + 연도(라임)
+  const hd = headText('Year in Review'), yt = ' ' + yr();
+  let s = 190, w1 = 0, w2 = 0;
+  for (; s >= 60; s -= 4) {
+    ctx.font = `italic 400 ${s}px ${F.inst}`; w1 = ctx.measureText(hd).width;
+    ctx.font = `400 ${s}px ${F.inst}`; w2 = ctx.measureText(yt).width;
+    if (w1 + w2 <= W - 140) break;
+  }
+  const hx = (W - (w1 + w2)) / 2, hy = 262;
+  ctx.textAlign = 'left';
+  ctx.font = `italic 400 ${s}px ${F.inst}`; ctx.fillStyle = cream; ctx.fillText(hd, hx, hy);
+  ctx.font = `400 ${s}px ${F.inst}`; ctx.fillStyle = lime; ctx.fillText(yt, hx + w1, hy);
+
+  ctx.textAlign = 'center'; ctx.fillStyle = cream; ctx.font = `500 26px ${F.plex}`;
+  ctx.fillText(ellipsize(ctx, titleText(), W - 160), W / 2, 328);
+  if (state.comment.trim()) {
+    ctx.font = `400 21px ${F.serif}`; ctx.fillStyle = mute;
+    ctx.fillText(ellipsize(ctx, state.comment.trim(), W - 160), W / 2, 370);
+  }
+
+  // 필름 스트립 4줄
+  const top = 414, bottom = 1648, gap = 22, band = 44;
+  const sh = (bottom - top - gap * 3) / 4, fh = sh - band * 2, fw = (SW - 36 - 28) / 3;
+  for (let r = 0; r < 4; r++) {
+    const sy = top + r * (sh + gap);
+    ctx.fillStyle = '#1C1B19'; ctx.fillRect(SX, sy, SW, sh);
+    ctx.fillStyle = '#0D0D0D';
+    for (let px = SX + 12; px + 15 <= SX + SW - 8; px += 27) {
+      rr(ctx, px, sy + 8, 15, 11, 2.5); ctx.fill();
+      rr(ctx, px, sy + sh - 19, 15, 11, 2.5); ctx.fill();
+    }
+    ctx.font = `400 12px ${F.mono}`; ctx.fillStyle = 'rgba(212,242,58,.55)'; ctx.textAlign = 'left';
+    ctx.fillText('SAFETY FILM', SX + 18, sy + 37);
+    for (let c = 0; c < 3; c++) {
+      const i = r * 3 + c, fx = SX + 18 + c * (fw + 14), fy = sy + band;
+      const cell = cellOf(i);
+      ctx.fillStyle = '#090909'; ctx.fillRect(fx, fy, fw, fh);
+      if (cell.kind === 'image') {
+        drawCover(ctx, cell.img, fx, fy, fw, fh, cell.m, 0);
+      } else if (cell.kind === 'text') {
+        ctx.save(); ctx.strokeStyle = 'rgba(239,231,214,.45)'; ctx.lineWidth = 1.2; ctx.strokeRect(fx + 10, fy + 10, fw - 20, fh - 20); ctx.restore();
+        textCell(ctx, { x: fx, y: fy, w: fw, h: fh }, cell.m, { pad: 28, align: 'center', valign: 'middle', tSize: 24, bSize: 15.5, lh: 1.6, tFont: s2 => `700 ${s2}px ${F.serif}`, bFont: s2 => `400 ${s2}px ${F.serif}`, tColor: cream, bColor: '#d2c9b8' });
+      } else {
+        ctx.save(); ctx.font = `italic 400 130px ${F.inst}`; ctx.fillStyle = '#23211E'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(pad2(i + 1), fx + fw / 2, fy + fh / 2 + 4); ctx.restore();
+      }
+      ctx.textAlign = 'right'; ctx.font = `400 12px ${F.mono}`; ctx.fillStyle = 'rgba(212,242,58,.55)';
+      ctx.fillText(`${i + 1}A`, fx + fw, sy + 37);
+      const by = sy + sh - 25;
+      ctx.textAlign = 'left'; ctx.fillStyle = lime; ctx.font = `500 14px ${F.mono}`;
+      ctx.fillText(pad2(i + 1), fx, by);
+      const nW = ctx.measureText(pad2(i + 1)).width;
+      ctx.textAlign = 'right'; ctx.font = `400 13px ${F.mono}`; ctx.fillStyle = 'rgba(212,242,58,.75)';
+      ctx.fillText(MON[i], fx + fw, by);
+      const mW = ctx.measureText(MON[i]).width;
+      if (cell.kind === 'image' && cell.m.title.trim()) {
+        ctx.textAlign = 'left'; ctx.font = `500 14px ${F.plex}`; ctx.fillStyle = cream;
+        ctx.fillText(ellipsize(ctx, cell.m.title.trim(), fw - nW - mW - 30), fx + nW + 12, by);
+      }
+    }
+  }
+  grain(ctx, 0.14);
+
+  ctx.fillStyle = mute; ctx.font = `400 13px ${F.mono}`;
+  spaced(ctx, 'DIRECTED BY', SX, 1704, 3, 'left');
+  spaced(ctx, 'RUNTIME', W / 2, 1704, 3, 'center');
+  spaced(ctx, 'CREDIT', SX + SW, 1704, 3, 'right');
+  ctx.fillStyle = cream;
+  ctx.textAlign = 'left'; ctx.font = `700 25px ${F.plex}`;
+  ctx.fillText(ellipsize(ctx, nameText(), 380), SX, 1744);
+  ctx.textAlign = 'center'; ctx.font = `italic 400 34px ${F.inst}`;
+  ctx.fillText('12 Months', W / 2, 1746);
+  ctx.textAlign = 'right'; ctx.font = `500 20px ${F.plex}`;
+  ctx.fillText(ellipsize(ctx, state.footer.trim() || yr(), 380), SX + SW, 1744);
+}
+
+/* ---------- 테마 3: POP (키치 스티커) ---------- */
+function starPath(ctx, x, y, R, r, n, rot) {
+  ctx.beginPath();
+  for (let k = 0; k < n * 2; k++) {
+    const a = rot + k * Math.PI / n - Math.PI / 2, rad = k % 2 ? r : R;
+    const px = x + Math.cos(a) * rad, py = y + Math.sin(a) * rad;
+    if (k) ctx.lineTo(px, py); else ctx.moveTo(px, py);
+  }
+  ctx.closePath();
+}
+function heartPath(ctx, x, y, s) {
+  ctx.beginPath();
+  ctx.moveTo(x, y + s * 0.8);
+  ctx.bezierCurveTo(x - s * 1.25, y - s * 0.1, x - s * 0.6, y - s * 0.95, x, y - s * 0.3);
+  ctx.bezierCurveTo(x + s * 0.6, y - s * 0.95, x + s * 1.25, y - s * 0.1, x, y + s * 0.8);
+  ctx.closePath();
+}
+// 스티커: 번지지 않는 딱딱한 그림자 + 굵은 외곽선
+function stk(ctx, path, fill, off, lw) {
+  const ink = '#2B1B5A';
+  ctx.save(); ctx.translate(off, off); path(); ctx.fillStyle = ink; ctx.fill(); ctx.lineWidth = lw; ctx.strokeStyle = ink; ctx.lineJoin = 'round'; ctx.stroke(); ctx.restore();
+  path(); ctx.fillStyle = fill; ctx.fill(); ctx.lineWidth = lw; ctx.strokeStyle = ink; ctx.lineJoin = 'round'; ctx.stroke();
+}
+function checker(ctx, y0) {
+  for (let r = 0; r < 2; r++) for (let c = 0; c < W / 20; c++) {
+    ctx.fillStyle = (r + c) % 2 ? '#FFFFFF' : '#FF5FA8';
+    ctx.fillRect(c * 20, y0 + r * 20, 20, 20);
+  }
+}
+function drawPop(ctx) {
+  const ink = '#2B1B5A', K = ['#FF5FA8', '#FFE94A', '#6FE3FF', '#B8F23A', '#C49BFF', '#FF9A3D'], M = 70;
+  const ANG = [-1.6, 1.2, -0.8, 1.4, -1.2, 0.9, 1.6, -1, 1.1, -1.4, 0.8, -1.8];
+  const bg = ctx.createLinearGradient(0, 0, 0, H);
+  bg.addColorStop(0, '#FFB3DA'); bg.addColorStop(1, '#D6C4FF');
+  ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = 'rgba(255,255,255,.42)';
+  for (let r = 0, y = 56; y < H - 40; y += 30, r++) for (let x = (r % 2 ? 30 : 15); x < W; x += 30) { ctx.beginPath(); ctx.arc(x, y, 3.5, 0, Math.PI * 2); ctx.fill(); }
+  checker(ctx, 0); checker(ctx, H - 40);
+
+  // 장식 스티커
+  stk(ctx, () => starPath(ctx, 128, 158, 54, 25, 5, -0.2), '#FFE94A', 6, 5);
+  stk(ctx, () => starPath(ctx, 236, 104, 22, 10, 5, 0.3), '#6FE3FF', 4, 4);
+  stk(ctx, () => heartPath(ctx, 118, 338, 32), '#FF5FA8', 5, 5);
+  stk(ctx, () => heartPath(ctx, 968, 96, 20), '#6FE3FF', 4, 4);
+  stk(ctx, () => starPath(ctx, 1092, 418, 26, 12, 5, 0.2), '#C49BFF', 4, 4);
+
+  // 폭죽 배지 (채운 칸 수)
+  ctx.save(); ctx.translate(W - 190, 232); ctx.rotate(0.17);
+  stk(ctx, () => starPath(ctx, 0, 0, 112, 88, 14, 0), '#B8F23A', 7, 5);
+  ctx.fillStyle = ink; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.font = `800 44px ${F.unb}`; ctx.fillText(`${count()}/12`, 0, -8);
+  ctx.font = `700 15px ${F.dm}`; ctx.textBaseline = 'alphabetic'; spaced(ctx, 'MONTHS!', 0, 36, 2, 'center');
+  ctx.restore();
+
+  // 연도: 노랑→핑크, 흰 테두리, 남색 외곽선
+  const y = yr();
+  ctx.save(); ctx.translate(W / 2 - 78, 222); ctx.rotate(-0.05);
+  fitFont(ctx, y, 660, s => `800 ${s}px ${F.unb}`, 190, 90);
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineJoin = 'round';
+  ctx.strokeStyle = ink; ctx.fillStyle = ink; ctx.lineWidth = 26;
+  ctx.strokeText(y, 11, 11); ctx.strokeText(y, 0, 0);
+  ctx.strokeStyle = '#fff'; ctx.lineWidth = 11; ctx.strokeText(y, 0, 0);
+  const yg = ctx.createLinearGradient(0, -80, 0, 80);
+  yg.addColorStop(0, '#FFF06A'); yg.addColorStop(1, '#FF7FC0');
+  ctx.fillStyle = yg; ctx.fillText(y, 0, 0);
+  ctx.restore();
+
+  // 헤드라인 리본
+  const hd = headText('YEAR IN REVIEW').toUpperCase();
+  ctx.save(); ctx.translate(W / 2, 376); ctx.rotate(-0.022);
+  fitFont(ctx, hd, 760, s => `600 ${s}px ${F.unb}`, 32, 16);
+  const hw = ctx.measureText(hd).width;
+  stk(ctx, () => rr(ctx, -hw / 2 - 40, -34, hw + 80, 68, 14), '#6FE3FF', 7, 5);
+  ctx.fillStyle = ink; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(hd, 0, 2);
+  ctx.restore();
+
+  // 한글 제목 알약
+  ctx.font = `600 22px ${F.plex}`;
+  const tt = ellipsize(ctx, titleText(), W - M * 2 - 120), tw = ctx.measureText(tt).width;
+  stk(ctx, () => rr(ctx, W / 2 - tw / 2 - 26, 450 - 24, tw + 52, 48, 24), '#fff', 5, 4);
+  ctx.fillStyle = ink; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(tt, W / 2, 451);
+  if (state.comment.trim()) {
+    ctx.font = `20px ${F.gowun}`; ctx.textBaseline = 'alphabetic';
+    ctx.fillText(ellipsize(ctx, state.comment.trim(), W - M * 2), W / 2, 512);
+  }
+
+  // 폴라로이드 카드 3 × 4
+  const top = 540, bottom = 1640, gap = 26;
+  const cw = (W - M * 2 - gap * 2) / 3, rh = (bottom - top - gap * 3) / 4;
+  for (let i = 0; i < 12; i++) {
+    const c = i % 3, r = Math.floor(i / 3), x = M + c * (cw + gap), yy = top + r * (rh + gap);
+    const cell = cellOf(i), col = K[i % 6];
+    ctx.save();
+    ctx.translate(x + cw / 2, yy + rh / 2); ctx.rotate(ANG[i] * Math.PI / 180); ctx.translate(-cw / 2, -rh / 2);
+    stk(ctx, () => rr(ctx, 0, 0, cw, rh, 14), '#fff', 8, 4);
+    const fx = 12, fy = 12, fw = cw - 24, fh = rh - 12 - 46;
+    if (cell.kind === 'image') {
+      drawCover(ctx, cell.img, fx, fy, fw, fh, cell.m, 8);
+    } else if (cell.kind === 'text') {
+      rr(ctx, fx, fy, fw, fh, 8); ctx.fillStyle = PASTEL[i]; ctx.fill();
+      textCell(ctx, { x: fx, y: fy, w: fw, h: fh }, cell.m, { pad: 18, padTop: 26, align: 'left', valign: 'top', tSize: 24, bSize: 16.5, lh: 1.56, tFont: s => `600 ${s}px ${F.plex}`, bFont: s => `${s}px ${F.gowun}`, tColor: ink, bColor: '#4A3A7A' });
+    } else {
+      rr(ctx, fx, fy, fw, fh, 8); ctx.fillStyle = col; ctx.globalAlpha = .3; ctx.fill(); ctx.globalAlpha = 1;
+      ctx.save(); ctx.font = `800 70px ${F.unb}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineJoin = 'round';
+      ctx.strokeStyle = ink; ctx.lineWidth = 10; ctx.strokeText(pad2(i + 1), fx + fw / 2, fy + fh / 2 + 4);
+      ctx.fillStyle = '#fff'; ctx.fillText(pad2(i + 1), fx + fw / 2, fy + fh / 2 + 4); ctx.restore();
+    }
+    rr(ctx, fx, fy, fw, fh, 8); ctx.strokeStyle = ink; ctx.lineWidth = 3; ctx.stroke();
+    // 아래 여백: 작품 제목 또는 월 이름
+    const by = rh - 23;
+    ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.fillStyle = ink;
+    if (cell.kind === 'image' && cell.m.title.trim()) {
+      ctx.font = `600 17px ${F.plex}`;
+      ctx.fillText(ellipsize(ctx, cell.m.title.trim(), cw - 32 - 34), 16, by);
+    } else {
+      ctx.font = `700 13px ${F.dm}`; spaced(ctx, MONTH[i], 16, by, 2.5, 'left');
+    }
+    starPath(ctx, cw - 26, by, 10, 4.5, 5, 0); ctx.fillStyle = col; ctx.fill(); ctx.strokeStyle = ink; ctx.lineWidth = 2; ctx.stroke();
+    // 월 태그 스티커
+    ctx.save(); ctx.translate(20, 2); ctx.rotate(-0.09);
+    const lab = `${pad2(i + 1)} ${MON[i]}`;
+    ctx.font = `700 15px ${F.dm}`;
+    const lw2 = ctx.measureText(lab).width;
+    stk(ctx, () => rr(ctx, -12, -17, lw2 + 24, 34, 17), col, 4, 3);
+    ctx.fillStyle = ink; ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.fillText(lab, 0, 1);
+    ctx.restore();
+    ctx.restore();
+  }
+
+  // 하단
+  const fy2 = 1706;
+  ctx.textBaseline = 'middle';
+  ctx.font = `600 21px ${F.plex}`;
+  const nm = ellipsize(ctx, 'by ' + nameText(), 320), nw = ctx.measureText(nm).width;
+  stk(ctx, () => rr(ctx, M, fy2 - 25, nw + 44, 50, 25), '#FFE94A', 5, 4);
+  ctx.fillStyle = ink; ctx.textAlign = 'left'; ctx.fillText(nm, M + 22, fy2 + 1);
+  if (state.footer.trim()) {
+    ctx.font = `500 19px ${F.plex}`;
+    const ft = ellipsize(ctx, state.footer.trim(), 320), fw3 = ctx.measureText(ft).width;
+    stk(ctx, () => rr(ctx, W - M - fw3 - 44, fy2 - 25, fw3 + 44, 50, 25), '#fff', 5, 4);
+    ctx.fillStyle = ink; ctx.textAlign = 'right'; ctx.fillText(ft, W - M - 22, fy2 + 1);
+  }
+  ctx.font = `600 20px ${F.unb}`; ctx.fillStyle = ink; ctx.textAlign = 'center';
+  const ct = `${yr()} RECAP`, cW = ctx.measureText(ct).width;
+  ctx.fillText(ct, W / 2, fy2 + 1);
+  stk(ctx, () => starPath(ctx, W / 2 - cW / 2 - 28, fy2, 13, 6, 5, 0), '#FF5FA8', 3, 3);
+  stk(ctx, () => starPath(ctx, W / 2 + cW / 2 + 28, fy2, 13, 6, 5, 0), '#6FE3FF', 3, 3);
+}
+
+const THEMES = {
+  swiss: { draw: drawSwiss, fonts: [`20px ${F.anton}`, `700 20px ${F.inter}`, `800 20px ${F.inter}`, `400 20px ${F.plex}`, `500 20px ${F.plex}`, `600 20px ${F.plex}`, `700 20px ${F.plex}`] },
+  noir: { draw: drawNoir, fonts: [`italic 400 20px ${F.inst}`, `400 20px ${F.inst}`, `400 20px ${F.mono}`, `500 20px ${F.mono}`, `500 20px ${F.plex}`, `700 20px ${F.plex}`, `400 20px ${F.serif}`, `700 20px ${F.serif}`] },
+  pop: { draw: drawPop, fonts: [`600 20px ${F.unb}`, `800 20px ${F.unb}`, `700 20px ${F.dm}`, `20px ${F.gowun}`, `500 20px ${F.plex}`, `600 20px ${F.plex}`] }
+};
+
+function drawPoster(ctx, scale) {
+  SC = scale;
+  ctx.setTransform(scale, 0, 0, scale, 0, 0);
+  ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+  ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic'; noShadow(ctx);
+  ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+  THEMES[state.theme].draw(ctx);
+}
+
+/* ---------- 폰트: 먼저 그리고, 폰트가 오면 다시 그림 ---------- */
+const BASE_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 .,—-/…©\'이름의연말정산';
+let fontKey = '', fontBusy = false;
+function fontJob() {
+  const txt = [state.name, state.subject, state.year, state.headline, state.comment, state.footer, ...state.months.flatMap(m => [m.title, m.body])].join('');
+  const uniq = Array.from(new Set(Array.from(BASE_CHARS + txt))).join('');
+  return { key: state.theme + '|' + uniq, uniq, fonts: THEMES[state.theme].fonts };
+}
+function loadFonts(job) {
+  if (!document.fonts || !document.fonts.load) return Promise.resolve();
+  let ps;
+  try { ps = job.fonts.map(f => Promise.resolve(document.fonts.load(f, job.uniq)).catch(() => null)); }
+  catch (e) { return Promise.resolve(); }
+  return Promise.race([Promise.all(ps), new Promise(r => setTimeout(r, 3500))]);
+}
+function kickFonts() {
+  const job = fontJob();
+  if (job.key === fontKey || fontBusy) return;
+  fontBusy = true;
+  loadFonts(job).catch(() => null).then(() => { fontKey = job.key; fontBusy = false; render(); });
+}
+
+/* ---------- 미리보기 ---------- */
+const cv = $('#cv'), cvBox = $('#cvBox'), cv2 = $('#cv2');
+function paint(canvas, cssW) {
+  try {
+    const dpr = window.devicePixelRatio || 1;
+    const px = Math.max(300, Math.min(W, Math.round((cssW || 360) * dpr)));
+    const scale = px / W;
+    if (canvas.width !== px) { canvas.width = px; canvas.height = Math.round(H * scale); }
+    const ctx = canvas.getContext('2d');
+    ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, canvas.width, canvas.height);
+    drawPoster(ctx, scale);
+  } catch (e) { setStatus('미리보기를 그리지 못했어요'); }
+}
+function render() {
+  paint(cv, cvBox.clientWidth);
+  if ($('#pvModal').classList.contains('on')) paint(cv2, cv2.clientWidth);
+  $('#countLabel').textContent = `${count()} / 12 FILLED`;
+  kickFonts();
+}
+let rt = 0;
+function scheduleRender() { clearTimeout(rt); rt = setTimeout(render, 20); }
+
+/* ---------- 편집 UI ---------- */
+const monthsEl = $('#months');
+for (let i = 0; i < 12; i++) {
+  const b = document.createElement('button');
+  b.className = 'mbtn'; b.dataset.i = i; b.textContent = pad2(i + 1);
+  b.setAttribute('aria-label', `${i + 1}월`);
+  b.addEventListener('click', () => { state.cur = i; scheduleSave(); renderMonthEditor(); updateMonthGrid(); });
+  monthsEl.appendChild(b);
+}
+function updateMonthGrid() {
+  monthsEl.querySelectorAll('.mbtn').forEach((b, i) => {
+    const cell = cellOf(i);
+    b.classList.toggle('on', i === state.cur);
+    b.classList.toggle('img', cell.kind === 'image');
+    b.classList.toggle('txt', cell.kind === 'text');
+    b.style.backgroundImage = cell.kind === 'image' ? `linear-gradient(rgba(0,0,0,.22),rgba(0,0,0,.22)), url("${imgs[i].url}")` : '';
+  });
+}
+
+function changed() { scheduleSave(); scheduleRender(); }
+
+document.querySelectorAll('[data-k]').forEach(el => {
+  el.addEventListener('input', () => {
+    state[el.dataset.k] = el.dataset.k === 'year' ? el.value.replace(/[^0-9]/g, '') : el.value;
+    if (el.dataset.k === 'year' && el.value !== state.year) el.value = state.year;
+    updateTitlePreview(); changed();
+  });
+});
+function updateTitlePreview() { $('#titlePreview').textContent = '포스터에 들어가는 한글 제목: ' + titleText(); }
+function fillBasics() { document.querySelectorAll('[data-k]').forEach(el => { el.value = state[el.dataset.k]; }); updateTitlePreview(); }
+
+const themeBtns = document.querySelectorAll('[data-theme]');
+function updateThemes() { themeBtns.forEach(b => b.classList.toggle('on', b.dataset.theme === state.theme)); }
+themeBtns.forEach(b => b.addEventListener('click', () => { state.theme = b.dataset.theme; updateThemes(); changed(); }));
+
+const mType = $('#mType');
+mType.querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
+  state.months[state.cur].type = b.dataset.type;
+  renderMonthEditor(); updateMonthGrid(); changed();
+}));
+
+function renderMonthEditor() {
+  const i = state.cur, m = state.months[i];
+  $('#mLabel').innerHTML = `${MONTH[i]}<small>${i + 1}월</small>`;
+  mType.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.type === m.type));
+  $('#paneEmpty').hidden = m.type !== 'empty';
+  $('#paneImage').hidden = m.type !== 'image';
+  $('#paneText').hidden = m.type !== 'text';
+  const has = !!imgs[i];
+  $('#drop').hidden = has;
+  $('#thumb').hidden = !has;
+  $('#imgCtrls').hidden = !has;
+  if (has) $('#thumbImg').src = imgs[i].url;
+  $('#sZoom').value = Math.round(m.zoom * 100); $('#oZoom').textContent = Math.round(m.zoom * 100) + '%';
+  $('#sPx').value = m.px; $('#oPx').textContent = m.px;
+  $('#sPy').value = m.py; $('#oPy').textContent = m.py;
+  $('#mCaption').value = m.title;
+  $('#mTitle').value = m.title;
+  $('#mBody').value = m.body;
+}
+
+$('#sZoom').addEventListener('input', e => { const m = state.months[state.cur]; m.zoom = +e.target.value / 100; $('#oZoom').textContent = e.target.value + '%'; changed(); });
+$('#sPx').addEventListener('input', e => { const m = state.months[state.cur]; m.px = +e.target.value; $('#oPx').textContent = e.target.value; changed(); });
+$('#sPy').addEventListener('input', e => { const m = state.months[state.cur]; m.py = +e.target.value; $('#oPy').textContent = e.target.value; changed(); });
+$('#mCaption').addEventListener('input', e => { state.months[state.cur].title = e.target.value; changed(); });
+$('#mTitle').addEventListener('input', e => { state.months[state.cur].title = e.target.value; updateMonthGrid(); changed(); });
+$('#mBody').addEventListener('input', e => { state.months[state.cur].body = e.target.value; updateMonthGrid(); changed(); });
+
+const fileEl = $('#file');
+$('#drop').addEventListener('click', () => fileEl.click());
+$('#imgChange').addEventListener('click', () => fileEl.click());
+fileEl.addEventListener('change', () => { const f = fileEl.files && fileEl.files[0]; fileEl.value = ''; if (f) handleFile(f, state.cur); });
+const drop = $('#drop'), monthCard = $('#monthCard');
+['dragenter', 'dragover'].forEach(ev => monthCard.addEventListener(ev, e => {
+  if (e.dataTransfer && Array.from(e.dataTransfer.types || []).includes('Files')) { e.preventDefault(); drop.classList.add('over'); }
+}));
+['dragleave', 'drop'].forEach(ev => monthCard.addEventListener(ev, e => { if (ev === 'dragleave' && monthCard.contains(e.relatedTarget)) return; drop.classList.remove('over'); }));
+monthCard.addEventListener('drop', e => {
+  const f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+  if (!f) return;
+  e.preventDefault();
+  if (!/^image\//.test(f.type)) { toast('이미지 파일만 넣을 수 있어요'); return; }
+  handleFile(f, state.cur);
+});
+
+async function prepareBlob(file) {
+  const url = URL.createObjectURL(file);
+  try {
+    const el = await loadImage(url);
+    const w = el.naturalWidth, h = el.naturalHeight, max = 2400;
+    const s = Math.min(1, max / Math.max(w, h));
+    if (s === 1 && file.size < 6 * 1024 * 1024) return file;
+    const c = document.createElement('canvas'); c.width = Math.round(w * s); c.height = Math.round(h * s);
+    const g = c.getContext('2d'); g.imageSmoothingQuality = 'high'; g.drawImage(el, 0, 0, c.width, c.height);
+    const isPng = file.type === 'image/png';
+    const out = await new Promise(r => c.toBlob(r, isPng ? 'image/png' : 'image/jpeg', 0.92));
+    return out || file;
+  } finally { URL.revokeObjectURL(url); }
+}
+async function handleFile(file, i) {
+  toast('사진을 불러오는 중…');
+  try {
+    const b = await prepareBlob(file);
+    const obj = await makeImg(b);
+    freeImg(i); imgs[i] = obj;
+    const m = state.months[i]; m.type = 'image'; m.zoom = 1; m.px = 50; m.py = 50;
+    const ok = await store.set('img' + i, b);
+    if (!ok) toast('사진을 저장하지 못했어요. 새로고침하면 사라질 수 있어요');
+    else toast(`${i + 1}월에 사진을 넣었어요`);
+  } catch (e) { toast('사진을 열 수 없어요. 다른 파일로 해 주세요'); return; }
+  if (state.cur === i) renderMonthEditor();
+  updateMonthGrid(); changed();
+}
+$('#imgDel').addEventListener('click', async () => {
+  const i = state.cur; freeImg(i); await store.del('img' + i);
+  renderMonthEditor(); updateMonthGrid(); changed();
+});
+
+$('#mPrev').addEventListener('click', () => { state.cur = (state.cur + 11) % 12; renderMonthEditor(); updateMonthGrid(); scheduleSave(); });
+$('#mNext').addEventListener('click', () => { state.cur = (state.cur + 1) % 12; renderMonthEditor(); updateMonthGrid(); scheduleSave(); });
+$('#mClear').addEventListener('click', async () => {
+  const i = state.cur;
+  if (!(await ask(`CLEAR ${MONTH[i]}`, `${i + 1}월 칸의 글과 사진을 모두 지울까요?`))) return;
+  state.months[i] = defMonth(); freeImg(i); await store.del('img' + i);
+  renderMonthEditor(); updateMonthGrid(); changed();
+});
+$('#resetAll').addEventListener('click', async () => {
+  if (!(await ask('RESET ALL', '기본 정보, 12개 칸의 글과 사진을 모두 지울까요? 되돌릴 수 없어요.'))) return;
+  const theme = state.theme;
+  state = defState(); state.theme = theme;
+  for (let i = 0; i < 12; i++) { freeImg(i); await store.del('img' + i); }
+  fillBasics(); updateThemes(); renderMonthEditor(); updateMonthGrid(); changed();
+  toast('초기화했어요');
+});
+
+/* ---------- 모달·토스트 ---------- */
+let toastT = 0;
+function toast(t) { const el = $('#toast'); el.textContent = t; el.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove('on'), 2200); }
+function ask(title, msg) {
+  return new Promise(res => {
+    const md = $('#confirmModal');
+    $('#cTitle').textContent = title; $('#cMsg').textContent = msg;
+    md.classList.add('on');
+    const done = v => { md.classList.remove('on'); $('#cYes').onclick = $('#cNo').onclick = md.onclick = null; res(v); };
+    $('#cYes').onclick = () => done(true);
+    $('#cNo').onclick = () => done(false);
+    md.onclick = e => { if (e.target === md) done(false); };
+  });
+}
+const pvModal = $('#pvModal');
+$('#pvOpen').addEventListener('click', () => { pvModal.classList.add('on'); paint(cv2, cv2.clientWidth); });
+$('#pvClose').addEventListener('click', () => pvModal.classList.remove('on'));
+pvModal.addEventListener('click', e => { if (e.target === pvModal) pvModal.classList.remove('on'); });
+
+/* ---------- PNG 저장 ---------- */
+let dlPromise = null;
+function getDownloads() {
+  if (!dlPromise) {
+    try {
+      dlPromise = (window.claude && typeof window.claude.use === 'function') ? Promise.resolve(window.claude.use('downloads')).catch(() => null) : null;
+    } catch (e) { dlPromise = null; }
+  }
+  return dlPromise;
+}
+setTimeout(getDownloads, 0);
+
+let outUrl = '';
+async function exportPNG() {
+  const btns = [$('#saveDesk'), $('#saveMob')];
+  btns.forEach(b => { b.disabled = true; b.textContent = 'RENDERING…'; });
+  try {
+    await loadFonts(fontJob());
+    const c = document.createElement('canvas');
+    c.width = W * EXPORT_SCALE; c.height = H * EXPORT_SCALE;
+    drawPoster(c.getContext('2d'), EXPORT_SCALE);
+    const blobOut = await new Promise(r => c.toBlob(r, 'image/png'));
+    if (!blobOut) throw new Error('toBlob failed');
+    const name = `${yr()}_${(state.name.trim() || 'me')}_year-end.png`.replace(/[\\/:*?"<>|]/g, '_');
+
+    const p = getDownloads();
+    const ns = p ? await Promise.race([p, new Promise(r => setTimeout(() => r(null), 4000))]) : null;
+    if (ns && typeof ns.save === 'function') {
+      try {
+        await ns.save({ filename: name, data: blobOut });
+        toast('저장했어요');
+        return;
+      } catch (e) {
+        const code = e && e.code;
+        if (code === 'declined') { toast('저장을 취소했어요'); return; }
+        if (code === 'rate_limited') { toast('잠시 후 다시 눌러 주세요'); return; }
+      }
+    }
+    if (outUrl) URL.revokeObjectURL(outUrl);
+    outUrl = URL.createObjectURL(blobOut);
+    $('#outImg').src = outUrl;
+    const a = $('#outLink'); a.href = outUrl; a.download = name;
+    $('#imgModal').classList.add('on');
+  } catch (e) {
+    toast('이미지를 만들지 못했어요');
+  } finally {
+    btns.forEach(b => { b.disabled = false; b.textContent = 'SAVE PNG'; });
+  }
+}
+$('#saveDesk').addEventListener('click', exportPNG);
+$('#saveMob').addEventListener('click', exportPNG);
+$('#outClose').addEventListener('click', () => $('#imgModal').classList.remove('on'));
+$('#imgModal').addEventListener('click', e => { if (e.target === $('#imgModal')) $('#imgModal').classList.remove('on'); });
+
+/* ---------- 시작: 저장소를 기다리지 않고 바로 한 번 그림 ---------- */
+function refreshAll() { fillBasics(); updateThemes(); renderMonthEditor(); updateMonthGrid(); render(); }
+refreshAll();
+if (window.ResizeObserver) { try { new ResizeObserver(scheduleRender).observe(cvBox); } catch (e) {} }
+window.addEventListener('resize', scheduleRender);
+loadAll().then(refreshAll, refreshAll);
+})();
+</script>
+</body>
+</html>
