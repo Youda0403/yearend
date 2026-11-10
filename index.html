@@ -6,7 +6,7 @@
 <title>연말정산 포스터 메이커</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=DM+Mono:wght@400;500&family=DM+Sans:wght@500;700&family=Gowun+Dodum&family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=Inter+Tight:wght@500;600;700;800&family=Noto+Serif+KR:wght@400;700&family=Unbounded:wght@600;800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Caveat:wght@700&family=Nanum+Pen+Script&family=DM+Mono:wght@400;500&family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=Inter+Tight:wght@500;600;700;800&family=Noto+Serif+KR:wght@400;700&display=swap">
 <style>
 :root{--bg:#F5F4F0;--panel:#fff;--ink:#141414;--sub:#8a867e;--line:#E7E4DD;--soft:#F3F1EC;--acc:#E63B1F;--g:16px;--r:20px}
 *{box-sizing:border-box;margin:0}
@@ -55,8 +55,8 @@ textarea{height:160px;padding:12px 14px;resize:vertical;line-height:1.6}
 .sw.swiss::after{content:"";position:absolute;right:10px;top:10px;width:22px;height:22px;border-radius:50%;background:#E63B1F}
 .sw.noir{background:#0D0D0D;color:#EFE7D6;font-family:"Instrument Serif",serif;font-style:italic;font-size:30px}
 .sw.noir::after{content:"";position:absolute;left:10px;right:10px;bottom:10px;height:3px;background:#D4F23A}
-.sw.pop{background:#FFB3DA;color:#FFE94A;font-family:"Unbounded",sans-serif;font-weight:800;font-size:23px;-webkit-text-stroke:5px #2B1B5A;paint-order:stroke fill;text-shadow:3px 3px 0 #2B1B5A;transform:none}
-.sw.pop::after{content:"";position:absolute;left:0;right:0;bottom:0;height:8px;background:repeating-linear-gradient(90deg,#FF5FA8 0 8px,#fff 8px 16px)}
+.sw.diary{background-color:#F7F2E8;background-image:linear-gradient(rgba(110,145,190,.28) 1px,transparent 1px),linear-gradient(90deg,rgba(110,145,190,.28) 1px,transparent 1px);background-size:12px 12px;color:#2B2F45;font-family:"Caveat",cursive;font-weight:700;font-size:34px}
+.sw.diary::after{content:"";position:absolute;left:50%;top:6px;width:38px;height:12px;margin-left:-19px;background:rgba(232,180,184,.85);transform:rotate(-5deg)}
 .theme b{font-size:12px;font-weight:800;letter-spacing:.1em;padding:0 4px}
 .theme small{font-size:11px;color:var(--sub);padding:0 4px;margin-top:-6px}
 
@@ -148,7 +148,7 @@ canvas.poster{width:100%;height:auto;display:block;aspect-ratio:2/3;background:#
       <div class="themes">
         <button class="theme" data-theme="swiss"><div class="sw swiss">2026</div><b>SWISS</b><small>볼드 타이포 포스터</small></button>
         <button class="theme" data-theme="noir"><div class="sw noir">Review</div><b>NOIR</b><small>블랙 필름 시트</small></button>
-        <button class="theme" data-theme="pop"><div class="sw pop">2026</div><b>POP</b><small>키치 스티커</small></button>
+        <button class="theme" data-theme="diary"><div class="sw diary">2026</div><b>DIARY</b><small>다이어리 속지</small></button>
       </div>
     </div>
 
@@ -241,13 +241,15 @@ const F = {
   mono: '"DM Mono", "IBM Plex Sans KR", monospace',
   unb: '"Unbounded", "IBM Plex Sans KR", sans-serif',
   dm: '"DM Sans", "IBM Plex Sans KR", sans-serif',
-  gowun: '"Gowun Dodum", "IBM Plex Sans KR", sans-serif'
+  gowun: '"Gowun Dodum", "IBM Plex Sans KR", sans-serif',
+  hand: '"Caveat", "Nanum Pen Script", cursive',
+  pen: '"Nanum Pen Script", "Caveat", cursive'
 };
 const $ = s => document.querySelector(s);
 const pad2 = n => String(n).padStart(2, '0');
 const defMonth = () => ({ type: 'empty', title: '', body: '', zoom: 1, px: 50, py: 50 });
 const defState = () => ({ name: '', subject: '', year: String(new Date().getFullYear()), headline: '', comment: '', footer: '', theme: 'swiss', cur: 0, months: Array.from({ length: 12 }, defMonth) });
-const OLD_THEME = { gallery: 'swiss', cinema: 'noir', pastel: 'pop' };
+const OLD_THEME = { gallery: 'swiss', cinema: 'noir', pastel: 'diary', pop: 'diary' };
 
 let state = defState();
 const imgs = new Array(12).fill(null); // { blob, url, el }
@@ -698,159 +700,109 @@ function drawNoir(ctx) {
   ctx.fillText(ellipsize(ctx, state.footer.trim() || yr(), 380), SX + SW, 1744);
 }
 
-/* ---------- 테마 3: POP (키치 스티커) ---------- */
-function starPath(ctx, x, y, R, r, n, rot) {
-  ctx.beginPath();
-  for (let k = 0; k < n * 2; k++) {
-    const a = rot + k * Math.PI / n - Math.PI / 2, rad = k % 2 ? r : R;
-    const px = x + Math.cos(a) * rad, py = y + Math.sin(a) * rad;
-    if (k) ctx.lineTo(px, py); else ctx.moveTo(px, py);
+/* ---------- 테마 3: DIARY (다이어리 속지) ---------- */
+function drawDiary(ctx) {
+  const ink = '#2B2F45', mute = '#8A8577', L = 120, R = 1130;
+  const TAPE = ['#E8B4B8', '#B8D4C8', '#F0D9A0', '#B9C7E3', '#D8C2E0', '#F2C6A8'];
+  const ANG = [-1.4, 0.9, -0.6, 1.2, -1, 0.7, 1.3, -0.8, 0.9, -1.2, 0.6, -1.5];
+  // 모눈종이
+  ctx.fillStyle = '#F7F2E8'; ctx.fillRect(0, 0, W, H);
+  ctx.save(); ctx.strokeStyle = 'rgba(110,145,190,.22)'; ctx.lineWidth = 1; ctx.beginPath();
+  for (let x = 90; x <= W; x += 30) { ctx.moveTo(x, 0); ctx.lineTo(x, H); }
+  for (let y = 30; y < H; y += 30) { ctx.moveTo(84, y); ctx.lineTo(W, y); }
+  ctx.stroke(); ctx.restore();
+  // 바인더 구멍
+  ctx.fillStyle = '#EFE9DC'; ctx.fillRect(0, 0, 84, H);
+  ctx.save(); ctx.strokeStyle = 'rgba(43,47,69,.18)'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(84, 0); ctx.lineTo(84, H); ctx.stroke();
+  for (let k = 0; k < 9; k++) {
+    const hy = 120 + k * 195;
+    ctx.beginPath(); ctx.arc(42, hy, 15, 0, Math.PI * 2); ctx.fillStyle = '#CBC4B4'; ctx.fill();
+    ctx.strokeStyle = 'rgba(0,0,0,.2)'; ctx.lineWidth = 2; ctx.stroke();
+    ctx.beginPath(); ctx.arc(42, hy + 2, 11, 0, Math.PI * 2); ctx.fillStyle = '#B9B2A2'; ctx.fill();
   }
-  ctx.closePath();
-}
-function heartPath(ctx, x, y, s) {
-  ctx.beginPath();
-  ctx.moveTo(x, y + s * 0.8);
-  ctx.bezierCurveTo(x - s * 1.25, y - s * 0.1, x - s * 0.6, y - s * 0.95, x, y - s * 0.3);
-  ctx.bezierCurveTo(x + s * 0.6, y - s * 0.95, x + s * 1.25, y - s * 0.1, x, y + s * 0.8);
-  ctx.closePath();
-}
-// 스티커: 번지지 않는 딱딱한 그림자 + 굵은 외곽선
-function stk(ctx, path, fill, off, lw) {
-  const ink = '#2B1B5A';
-  ctx.save(); ctx.translate(off, off); path(); ctx.fillStyle = ink; ctx.fill(); ctx.lineWidth = lw; ctx.strokeStyle = ink; ctx.lineJoin = 'round'; ctx.stroke(); ctx.restore();
-  path(); ctx.fillStyle = fill; ctx.fill(); ctx.lineWidth = lw; ctx.strokeStyle = ink; ctx.lineJoin = 'round'; ctx.stroke();
-}
-function checker(ctx, y0) {
-  for (let r = 0; r < 2; r++) for (let c = 0; c < W / 20; c++) {
-    ctx.fillStyle = (r + c) % 2 ? '#FFFFFF' : '#FF5FA8';
-    ctx.fillRect(c * 20, y0 + r * 20, 20, 20);
-  }
-}
-function drawPop(ctx) {
-  const ink = '#2B1B5A', K = ['#FF5FA8', '#FFE94A', '#6FE3FF', '#B8F23A', '#C49BFF', '#FF9A3D'], M = 70;
-  const ANG = [-1.6, 1.2, -0.8, 1.4, -1.2, 0.9, 1.6, -1, 1.1, -1.4, 0.8, -1.8];
-  const bg = ctx.createLinearGradient(0, 0, 0, H);
-  bg.addColorStop(0, '#FFB3DA'); bg.addColorStop(1, '#D6C4FF');
-  ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
-  ctx.fillStyle = 'rgba(255,255,255,.42)';
-  for (let r = 0, y = 56; y < H - 40; y += 30, r++) for (let x = (r % 2 ? 30 : 15); x < W; x += 30) { ctx.beginPath(); ctx.arc(x, y, 3.5, 0, Math.PI * 2); ctx.fill(); }
-  checker(ctx, 0); checker(ctx, H - 40);
-
-  // 장식 스티커
-  stk(ctx, () => starPath(ctx, 128, 158, 54, 25, 5, -0.2), '#FFE94A', 6, 5);
-  stk(ctx, () => starPath(ctx, 236, 104, 22, 10, 5, 0.3), '#6FE3FF', 4, 4);
-  stk(ctx, () => heartPath(ctx, 118, 338, 32), '#FF5FA8', 5, 5);
-  stk(ctx, () => heartPath(ctx, 968, 96, 20), '#6FE3FF', 4, 4);
-  stk(ctx, () => starPath(ctx, 1092, 418, 26, 12, 5, 0.2), '#C49BFF', 4, 4);
-
-  // 폭죽 배지 (채운 칸 수)
-  ctx.save(); ctx.translate(W - 190, 232); ctx.rotate(0.17);
-  stk(ctx, () => starPath(ctx, 0, 0, 112, 88, 14, 0), '#B8F23A', 7, 5);
-  ctx.fillStyle = ink; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.font = `800 44px ${F.unb}`; ctx.fillText(`${count()}/12`, 0, -8);
-  ctx.font = `700 15px ${F.dm}`; ctx.textBaseline = 'alphabetic'; spaced(ctx, 'MONTHS!', 0, 36, 2, 'center');
   ctx.restore();
+  grain(ctx, 0.06);
 
-  // 연도: 노랑→핑크, 흰 테두리, 남색 외곽선
-  const y = yr();
-  ctx.save(); ctx.translate(W / 2 - 78, 222); ctx.rotate(-0.05);
-  fitFont(ctx, y, 660, s => `800 ${s}px ${F.unb}`, 190, 90);
-  ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineJoin = 'round';
-  ctx.strokeStyle = ink; ctx.fillStyle = ink; ctx.lineWidth = 26;
-  ctx.strokeText(y, 11, 11); ctx.strokeText(y, 0, 0);
-  ctx.strokeStyle = '#fff'; ctx.lineWidth = 11; ctx.strokeText(y, 0, 0);
-  const yg = ctx.createLinearGradient(0, -80, 0, 80);
-  yg.addColorStop(0, '#FFF06A'); yg.addColorStop(1, '#FF7FC0');
-  ctx.fillStyle = yg; ctx.fillText(y, 0, 0);
-  ctx.restore();
+  // 머리말
+  ctx.textBaseline = 'alphabetic'; ctx.fillStyle = mute; ctx.font = `500 15px ${F.mono}`;
+  spaced(ctx, 'YEARLY LOG', L, 96, 3, 'left');
+  spaced(ctx, `DATE. ${yr()}. 01 — 12`, R, 96, 3, 'right');
+  hline(ctx, L, 114, R, 1.2, 'rgba(43,47,69,.45)');
 
-  // 헤드라인 리본
-  const hd = headText('YEAR IN REVIEW').toUpperCase();
-  ctx.save(); ctx.translate(W / 2, 376); ctx.rotate(-0.022);
-  fitFont(ctx, hd, 760, s => `600 ${s}px ${F.unb}`, 32, 16);
+  // 손글씨 제목 + 형광펜
+  const hd = headText('Year in Review');
+  const hs = fitFont(ctx, hd, 680, s => `700 ${s}px ${F.hand}`, 132, 56);
   const hw = ctx.measureText(hd).width;
-  stk(ctx, () => rr(ctx, -hw / 2 - 40, -34, hw + 80, 68, 14), '#6FE3FF', 7, 5);
-  ctx.fillStyle = ink; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(hd, 0, 2);
+  ctx.fillStyle = 'rgba(255,221,87,.78)';
+  ctx.beginPath(); ctx.moveTo(L - 10, 214); ctx.lineTo(L + hw + 16, 206); ctx.lineTo(L + hw + 10, 256); ctx.lineTo(L - 6, 260); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = ink; ctx.textAlign = 'left'; ctx.fillText(hd, L, 250);
+  // 연도 + 빨간 펜 동그라미
+  const yx = R - 150, yy0 = 212;
+  ctx.save(); ctx.font = `700 112px ${F.hand}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(yr(), yx, yy0 + 4);
+  ctx.strokeStyle = '#D9483B'; ctx.lineWidth = 4; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.ellipse(yx, yy0, 152, 76, -0.07, 0.25, Math.PI * 2 + 0.05); ctx.stroke();
+  ctx.lineWidth = 3; ctx.beginPath(); ctx.ellipse(yx + 3, yy0 + 2, 158, 70, 0.03, 3.4, Math.PI * 2 + 2.2); ctx.stroke();
   ctx.restore();
 
-  // 한글 제목 알약
-  ctx.font = `600 22px ${F.plex}`;
-  const tt = ellipsize(ctx, titleText(), W - M * 2 - 120), tw = ctx.measureText(tt).width;
-  stk(ctx, () => rr(ctx, W / 2 - tw / 2 - 26, 450 - 24, tw + 52, 48, 24), '#fff', 5, 4);
-  ctx.fillStyle = ink; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(tt, W / 2, 451);
+  ctx.fillStyle = ink; ctx.textAlign = 'left'; ctx.font = `42px ${F.pen}`;
+  ctx.fillText(ellipsize(ctx, titleText(), R - L), L, 320);
   if (state.comment.trim()) {
-    ctx.font = `20px ${F.gowun}`; ctx.textBaseline = 'alphabetic';
-    ctx.fillText(ellipsize(ctx, state.comment.trim(), W - M * 2), W / 2, 512);
+    ctx.font = `32px ${F.pen}`; ctx.fillStyle = '#6B6A75';
+    ctx.fillText(ellipsize(ctx, state.comment.trim(), R - L), L, 364);
   }
 
-  // 폴라로이드 카드 3 × 4
-  const top = 540, bottom = 1640, gap = 26;
-  const cw = (W - M * 2 - gap * 2) / 3, rh = (bottom - top - gap * 3) / 4;
+  // 붙여 놓은 사진·메모 3 × 4
+  const top = 404, bottom = 1640, gx = 34, gy = 30;
+  const cw = (R - L - gx * 2) / 3, rh = (bottom - top - gy * 3) / 4;
   for (let i = 0; i < 12; i++) {
-    const c = i % 3, r = Math.floor(i / 3), x = M + c * (cw + gap), yy = top + r * (rh + gap);
-    const cell = cellOf(i), col = K[i % 6];
+    const c = i % 3, r = Math.floor(i / 3), x = L + c * (cw + gx), y = top + r * (rh + gy);
+    const cell = cellOf(i);
+    const px = 8, py = 14, pw = cw - 16, ph = rh - 14 - 58;
     ctx.save();
-    ctx.translate(x + cw / 2, yy + rh / 2); ctx.rotate(ANG[i] * Math.PI / 180); ctx.translate(-cw / 2, -rh / 2);
-    stk(ctx, () => rr(ctx, 0, 0, cw, rh, 14), '#fff', 8, 4);
-    const fx = 12, fy = 12, fw = cw - 24, fh = rh - 12 - 46;
-    if (cell.kind === 'image') {
-      drawCover(ctx, cell.img, fx, fy, fw, fh, cell.m, 8);
-    } else if (cell.kind === 'text') {
-      rr(ctx, fx, fy, fw, fh, 8); ctx.fillStyle = PASTEL[i]; ctx.fill();
-      textCell(ctx, { x: fx, y: fy, w: fw, h: fh }, cell.m, { pad: 18, padTop: 26, align: 'left', valign: 'top', tSize: 24, bSize: 16.5, lh: 1.56, tFont: s => `600 ${s}px ${F.plex}`, bFont: s => `${s}px ${F.gowun}`, tColor: ink, bColor: '#4A3A7A' });
+    ctx.translate(x + cw / 2, y + rh / 2); ctx.rotate((cell.kind === 'empty' ? 0 : ANG[i]) * Math.PI / 180); ctx.translate(-cw / 2, -rh / 2);
+    if (cell.kind === 'empty') {
+      ctx.save(); ctx.setLineDash([9, 9]); ctx.strokeStyle = 'rgba(43,47,69,.3)'; ctx.lineWidth = 2; ctx.strokeRect(px, py, pw, ph); ctx.restore();
+      ctx.save(); ctx.font = `700 96px ${F.hand}`; ctx.fillStyle = 'rgba(43,47,69,.15)'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(pad2(i + 1), px + pw / 2, py + ph / 2 + 4); ctx.restore();
     } else {
-      rr(ctx, fx, fy, fw, fh, 8); ctx.fillStyle = col; ctx.globalAlpha = .3; ctx.fill(); ctx.globalAlpha = 1;
-      ctx.save(); ctx.font = `800 70px ${F.unb}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineJoin = 'round';
-      ctx.strokeStyle = ink; ctx.lineWidth = 10; ctx.strokeText(pad2(i + 1), fx + fw / 2, fy + fh / 2 + 4);
-      ctx.fillStyle = '#fff'; ctx.fillText(pad2(i + 1), fx + fw / 2, fy + fh / 2 + 4); ctx.restore();
+      ctx.save(); shadow(ctx, 'rgba(60,50,30,.24)', 10, 4);
+      ctx.fillStyle = cell.kind === 'image' ? '#FFFFFF' : '#FFF6C9'; ctx.fillRect(px, py, pw, ph); ctx.restore();
+      if (cell.kind === 'image') drawCover(ctx, cell.img, px + 9, py + 9, pw - 18, ph - 18, cell.m, 0);
+      else textCell(ctx, { x: px, y: py, w: pw, h: ph }, cell.m, { pad: 20, padTop: 30, align: 'left', valign: 'top', tSize: 34, bSize: 25, lh: 1.22, tFont: s => `${s}px ${F.pen}`, bFont: s => `${s}px ${F.pen}`, tColor: ink, bColor: '#4A4D63' });
+      // 마스킹테이프
+      ctx.save(); ctx.translate(cw / 2, py + 2); ctx.rotate((i % 2 ? 4 : -5) * Math.PI / 180);
+      ctx.globalAlpha = .8; ctx.fillStyle = TAPE[i % 6]; ctx.fillRect(-50, -14, 100, 28);
+      ctx.globalAlpha = .28; ctx.fillStyle = '#fff'; for (let sx = -44; sx < 50; sx += 14) ctx.fillRect(sx, -14, 5, 28);
+      ctx.restore();
     }
-    rr(ctx, fx, fy, fw, fh, 8); ctx.strokeStyle = ink; ctx.lineWidth = 3; ctx.stroke();
-    // 아래 여백: 작품 제목 또는 월 이름
-    const by = rh - 23;
-    ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.fillStyle = ink;
+    // 손글씨 라벨
+    const ly = rh - 16;
+    ctx.fillStyle = ink; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic'; ctx.font = `700 32px ${F.hand}`;
+    const lab = `${pad2(i + 1)} ${MON[i][0]}${MON[i].slice(1).toLowerCase()}.`;
+    ctx.fillText(lab, px + 2, ly);
+    const lw = ctx.measureText(lab).width;
     if (cell.kind === 'image' && cell.m.title.trim()) {
-      ctx.font = `600 17px ${F.plex}`;
-      ctx.fillText(ellipsize(ctx, cell.m.title.trim(), cw - 32 - 34), 16, by);
-    } else {
-      ctx.font = `700 13px ${F.dm}`; spaced(ctx, MONTH[i], 16, by, 2.5, 'left');
+      ctx.font = `28px ${F.pen}`; ctx.fillStyle = '#55566A';
+      ctx.fillText(ellipsize(ctx, cell.m.title.trim(), pw - lw - 16), px + lw + 14, ly);
     }
-    starPath(ctx, cw - 26, by, 10, 4.5, 5, 0); ctx.fillStyle = col; ctx.fill(); ctx.strokeStyle = ink; ctx.lineWidth = 2; ctx.stroke();
-    // 월 태그 스티커
-    ctx.save(); ctx.translate(20, 2); ctx.rotate(-0.09);
-    const lab = `${pad2(i + 1)} ${MON[i]}`;
-    ctx.font = `700 15px ${F.dm}`;
-    const lw2 = ctx.measureText(lab).width;
-    stk(ctx, () => rr(ctx, -12, -17, lw2 + 24, 34, 17), col, 4, 3);
-    ctx.fillStyle = ink; ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.fillText(lab, 0, 1);
-    ctx.restore();
     ctx.restore();
   }
 
-  // 하단
-  const fy2 = 1706;
-  ctx.textBaseline = 'middle';
-  ctx.font = `600 21px ${F.plex}`;
-  const nm = ellipsize(ctx, 'by ' + nameText(), 320), nw = ctx.measureText(nm).width;
-  stk(ctx, () => rr(ctx, M, fy2 - 25, nw + 44, 50, 25), '#FFE94A', 5, 4);
-  ctx.fillStyle = ink; ctx.textAlign = 'left'; ctx.fillText(nm, M + 22, fy2 + 1);
+  // 꼬리말
+  hline(ctx, L, 1672, R, 1.2, 'rgba(43,47,69,.45)');
+  ctx.fillStyle = ink; ctx.textBaseline = 'alphabetic'; ctx.textAlign = 'left'; ctx.font = `700 42px ${F.hand}`;
+  ctx.fillText(ellipsize(ctx, 'by ' + nameText(), 380), L, 1734);
   if (state.footer.trim()) {
-    ctx.font = `500 19px ${F.plex}`;
-    const ft = ellipsize(ctx, state.footer.trim(), 320), fw3 = ctx.measureText(ft).width;
-    stk(ctx, () => rr(ctx, W - M - fw3 - 44, fy2 - 25, fw3 + 44, 50, 25), '#fff', 5, 4);
-    ctx.fillStyle = ink; ctx.textAlign = 'right'; ctx.fillText(ft, W - M - 22, fy2 + 1);
+    ctx.textAlign = 'right'; ctx.font = `700 36px ${F.hand}`;
+    ctx.fillText(ellipsize(ctx, state.footer.trim(), 380), R, 1734);
   }
-  ctx.font = `600 20px ${F.unb}`; ctx.fillStyle = ink; ctx.textAlign = 'center';
-  const ct = `${yr()} RECAP`, cW = ctx.measureText(ct).width;
-  ctx.fillText(ct, W / 2, fy2 + 1);
-  stk(ctx, () => starPath(ctx, W / 2 - cW / 2 - 28, fy2, 13, 6, 5, 0), '#FF5FA8', 3, 3);
-  stk(ctx, () => starPath(ctx, W / 2 + cW / 2 + 28, fy2, 13, 6, 5, 0), '#6FE3FF', 3, 3);
+  ctx.fillStyle = mute; ctx.font = `500 14px ${F.mono}`;
+  spaced(ctx, `${pad2(count())} / 12 PAGES FILLED`, (L + R) / 2, 1728, 3, 'center');
 }
 
 const THEMES = {
   swiss: { draw: drawSwiss, fonts: [`20px ${F.anton}`, `700 20px ${F.inter}`, `800 20px ${F.inter}`, `400 20px ${F.plex}`, `500 20px ${F.plex}`, `600 20px ${F.plex}`, `700 20px ${F.plex}`] },
   noir: { draw: drawNoir, fonts: [`italic 400 20px ${F.inst}`, `400 20px ${F.inst}`, `400 20px ${F.mono}`, `500 20px ${F.mono}`, `500 20px ${F.plex}`, `700 20px ${F.plex}`, `400 20px ${F.serif}`, `700 20px ${F.serif}`] },
-  pop: { draw: drawPop, fonts: [`600 20px ${F.unb}`, `800 20px ${F.unb}`, `700 20px ${F.dm}`, `20px ${F.gowun}`, `500 20px ${F.plex}`, `600 20px ${F.plex}`] }
+  diary: { draw: drawDiary, fonts: [`700 20px ${F.hand}`, `20px ${F.pen}`, `500 20px ${F.mono}`] }
 };
 
 function drawPoster(ctx, scale) {
