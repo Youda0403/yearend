@@ -798,7 +798,7 @@ function bow(c, x, y, s, color) {
 }
 function heartDoodle(c, x, y, s, fill, line) {
   const p = heartP(x, y, s);
-  c.save(); c.fillStyle = fill; c.fill(p); c.lineWidth = 2.6; c.strokeStyle = line; c.lineJoin = 'round'; c.stroke(p); c.restore();
+  c.save(); c.fillStyle = fill; c.fill(p); c.lineWidth = Math.max(2.6, s * .1); c.strokeStyle = line; c.lineJoin = 'round'; c.stroke(p); c.restore();
 }
 function clover(c, x, y, s, rot) {
   c.save(); c.translate(x, y); c.rotate(rot);
@@ -837,6 +837,7 @@ function mixText(c, text, x, y, px, align, maxW) {
   c.textAlign = align; c.fillText(t, x, y);
   return c.measureText(t).width;
 }
+function hline2(c, x1, y1, x2, y2, w, color) { c.save(); c.strokeStyle = color; c.lineWidth = w; c.beginPath(); c.moveTo(x1, y1); c.lineTo(x2, y2); c.stroke(); c.restore(); }
 function drawDoodle(ctx) {
   rnd = seeded(20261111);
   const ink = '#3E5FA8', red = '#E2554A', M = 78, CX = W / 2;
@@ -858,11 +859,8 @@ function drawDoodle(ctx) {
    [0, 1140, 760, 660, 'gingham', '#FFFCEE', '#F3D26A', 36],
    [760, 1140, 440, 660, 'dots', '#F4F9FF', '#9CC3EE', 36]]
     .forEach(p => pat(ctx, ...p));
-  stitches(ctx, 0, 540, W, 540, '#F3C64B', 22, 18);
-  stitches(ctx, 420, 540, 420, 1140, '#8DBF6E', 22, 18);
-  stitches(ctx, 0, 1140, W, 1140, '#F09AAE', 22, 18);
-  stitches(ctx, 640, 0, 640, 540, '#9CC3EE', 22, 18);
-  stitches(ctx, 760, 1140, 760, H, '#F3C64B', 22, 18);
+  [[0, 540, W, 540], [420, 540, 420, 1140], [0, 1140, W, 1140], [640, 0, 640, 540], [760, 1140, 760, H]]
+    .forEach(([x1, y1, x2, y2]) => hline2(ctx, x1, y1, x2, y2, 6, '#FFFFFF'));
 
   // 머리 라벨
   const hw = 900, hh = 386, hcy = 66 + hh / 2;
@@ -894,8 +892,8 @@ function drawDoodle(ctx) {
   });
   dStar(L, 172, 96, 50, -0.25, red, '#B83E35', true);
   dStar(L, 1046, 120, 28, 0.3, '#8FB9EC', ink, false);
-  heartDoodle(L, 124, 432, 22, '#F4A9B8', '#D9748A');
-  clover(L, 1078, 420, 15, 0.3);
+  heartDoodle(L, 128, 426, 34, '#F4A9B8', '#D9748A');
+  clover(L, 1076, 408, 24, 0.3);
   star(L, 232, 250, 12, '#F5D46B'); star(L, 1110, 250, 10, '#8FB9EC');
   swirl(L, 1005, 196, 20, '#F09AAE');
 
@@ -930,8 +928,8 @@ function drawDoodle(ctx) {
         const d = i % 4;
         if (d === 0) bow(L, 0, y0 + 2, 26, red);
         else if (d === 1) dStar(L, x0 + cw - 16, iy + ih - 4, 24, 0.2, red, '#B83E35', true);
-        else if (d === 2) heartDoodle(L, x0 + cw - 18, y0 + 14, 16, '#F4A9B8', '#D9748A');
-        else clover(L, x0 + 16, y0 + 16, 13, -0.3);
+        else if (d === 2) heartDoodle(L, x0 + cw - 20, y0 + 14, 27, '#F4A9B8', '#D9748A');
+        else clover(L, x0 + 18, y0 + 16, 20, -0.3);
       }
       const ly = y0 + rh - 16;
       ctx.fillStyle = ink; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic'; ctx.font = `30px ${F.hand}`;
@@ -949,8 +947,7 @@ function drawDoodle(ctx) {
   both(CX, 1700, 0.5, () => {
     const fw = W - M * 2, fh = 92, p = wobRect(-fw / 2, -fh / 2, fw, fh, 2);
     ctx.fillStyle = '#FFFEF8'; ctx.fill(p);
-    stitches(L, -fw / 2, -fh / 2, fw / 2, -fh / 2, '#F09AAE', 22, 16);
-    stitches(L, -fw / 2, fh / 2, fw / 2, fh / 2, '#F09AAE', 22, 16);
+    L.save(); L.strokeStyle = ink; L.lineWidth = 3.2; L.stroke(p); L.restore();
     ctx.fillStyle = ink; ctx.textBaseline = 'middle';
     ctx.font = `32px ${F.hand}`; ctx.textAlign = 'left'; ctx.fillText('by', -fw / 2 + 32, 2);
     const bw = ctx.measureText('by ').width;
