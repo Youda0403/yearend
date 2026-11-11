@@ -565,12 +565,14 @@ function drawSwiss(ctx) {
 
   // 헤드라인 + 한글 제목
   const hd = headText('YEAR IN REVIEW').toUpperCase();
+  // 소감이 없으면 제목 줄을 연도와 구분선 사이 가운데로 내림
+  const hy = state.comment.trim() ? 528 : 543;
   ctx.fillStyle = acc; ctx.textAlign = 'left';
   fitFont(ctx, hd, IW * 0.62, s => `800 ${s}px ${F.inter}`, 52, 24);
-  ctx.fillText(hd, M, 528);
+  ctx.fillText(hd, M, hy);
   const hw = ctx.measureText(hd).width;
   ctx.fillStyle = ink; ctx.textAlign = 'right'; ctx.font = `600 24px ${F.plex}`;
-  ctx.fillText(ellipsize(ctx, titleText(), IW - hw - 36), W - M, 528);
+  ctx.fillText(ellipsize(ctx, titleText(), IW - hw - 36), W - M, hy);
   if (state.comment.trim()) {
     ctx.textAlign = 'left'; ctx.font = `400 20px ${F.plex}`; ctx.fillStyle = '#5c574e';
     ctx.fillText(ellipsize(ctx, state.comment.trim(), IW), M, 566);
