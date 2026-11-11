@@ -6,8 +6,9 @@
 <title>연말정산 포스터 메이커</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Patrick+Hand&family=Sniglet:wght@400;800&family=Jua&family=Gaegu:wght@700&family=DM+Mono:wght@400;500&family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=Inter+Tight:wght@500;600;700;800&family=Noto+Serif+KR:wght@400;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Patrick+Hand&family=Sniglet:wght@400;800&family=DM+Mono:wght@400;500&family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=Inter+Tight:wght@500;600;700;800&family=Noto+Serif+KR:wght@400;700&display=swap">
 <style>
+@font-face{font-family:"SSRONETHandwritten";src:url("https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_2402_1@1.0/SSRONETHandwritten.woff2") format("woff2");font-weight:normal;font-style:normal;font-display:swap}
 :root{--bg:#F5F4F0;--panel:#fff;--ink:#141414;--sub:#8a867e;--line:#E7E4DD;--soft:#F3F1EC;--acc:#E63B1F;--g:16px;--r:20px}
 *{box-sizing:border-box;margin:0}
 [hidden]{display:none!important}
@@ -241,10 +242,9 @@ const F = {
   mono: '"DM Mono", "IBM Plex Sans KR", monospace',
   unb: '"Unbounded", "IBM Plex Sans KR", sans-serif',
   dm: '"DM Sans", "IBM Plex Sans KR", sans-serif',
-  hand: '"Patrick Hand", "Gaegu", cursive',
-  snig: '"Sniglet", "Jua", sans-serif',
-  jua: '"Jua", "Sniglet", sans-serif',
-  gaegu: '"Gaegu", "Patrick Hand", cursive'
+  hand: '"Patrick Hand", "SSRONETHandwritten", cursive',
+  snig: '"Sniglet", "SSRONETHandwritten", sans-serif',
+  ssro: '"SSRONETHandwritten", "Patrick Hand", cursive'
 };
 const $ = s => document.querySelector(s);
 const pad2 = n => String(n).padStart(2, '0');
@@ -829,7 +829,7 @@ function speckle(c) {
 // 영문은 손글씨체, 한글은 고운돋움
 function mixText(c, text, x, y, px, align, maxW) {
   const kr = /[^\x00-\x7F]/.test(text);
-  c.font = kr ? `700 ${Math.round(px * 0.98)}px ${F.gaegu}` : `${px}px ${F.hand}`;
+  c.font = kr ? `${Math.round(px * 0.9)}px ${F.ssro}` : `${px}px ${F.hand}`;
   const t = ellipsize(c, text, maxW);
   c.textAlign = align; c.fillText(t, x, y);
   return c.measureText(t).width;
@@ -880,10 +880,10 @@ function drawDoodle(ctx) {
     star(L, -yw / 2 - 40, 22, 16, '#F5D46B'); star(L, yw / 2 + 40, 22, 16, '#F4A9B8');
     bow(L, 0, -hh / 2 + 2, 34, red);
 
-    ctx.fillStyle = ink; ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic'; ctx.font = `31px ${F.jua}`;
+    ctx.fillStyle = ink; ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic'; ctx.font = `32px ${F.ssro}`;
     ctx.fillText(ellipsize(ctx, titleText(), 760), 0, 109);
     if (state.comment.trim()) {
-      ctx.font = `700 25px ${F.gaegu}`; ctx.fillStyle = '#6F7FA8';
+      ctx.font = `23px ${F.ssro}`; ctx.fillStyle = '#6F7FA8';
       ctx.fillText(ellipsize(ctx, state.comment.trim(), 760), 0, 151);
     }
   });
@@ -918,7 +918,7 @@ function drawDoodle(ctx) {
           ctx.strokeStyle = 'rgba(143,185,236,.45)'; ctx.lineWidth = 1.5; ctx.beginPath();
           for (let ly = iy + 40; ly < iy + ih; ly += 27) { ctx.moveTo(ix, ly); ctx.lineTo(ix + iw, ly); }
           ctx.stroke(); ctx.restore();
-          textCell(ctx, { x: ix, y: iy, w: iw, h: ih }, cell.m, { pad: 14, padTop: 16, align: 'left', valign: 'top', tSize: 28, bSize: 21, lh: 1.3, tFont: s => `700 ${s}px ${F.gaegu}`, bFont: s => `700 ${s}px ${F.gaegu}`, tColor: ink, bColor: '#4E5A80' });
+          textCell(ctx, { x: ix, y: iy, w: iw, h: ih }, cell.m, { pad: 14, padTop: 16, align: 'left', valign: 'top', tSize: 26, bSize: 19, lh: 1.42, tFont: s => `${s}px ${F.ssro}`, bFont: s => `${s}px ${F.ssro}`, tColor: ink, bColor: '#4E5A80' });
         }
         L.save(); L.strokeStyle = ink; L.lineWidth = 3.2; L.stroke(p);
         L.lineWidth = 2; L.stroke(wobRect(ix, iy, iw, ih, 1.2)); L.restore();
@@ -934,7 +934,7 @@ function drawDoodle(ctx) {
       ctx.fillText(lab, ix + 2, ly);
       const lw = ctx.measureText(lab).width;
       if (cell.kind === 'image' && cell.m.title.trim()) {
-        ctx.font = `700 23px ${F.gaegu}`; ctx.fillStyle = '#5A6688';
+        ctx.font = `21px ${F.ssro}`; ctx.fillStyle = '#5A6688';
         ctx.fillText(ellipsize(ctx, cell.m.title.trim(), iw - lw - 18), ix + lw + 14, ly - 1);
       }
     });
@@ -964,7 +964,7 @@ function drawDoodle(ctx) {
 const THEMES = {
   swiss: { draw: drawSwiss, fonts: [`20px ${F.anton}`, `700 20px ${F.inter}`, `800 20px ${F.inter}`, `400 20px ${F.plex}`, `500 20px ${F.plex}`, `600 20px ${F.plex}`, `700 20px ${F.plex}`] },
   noir: { draw: drawNoir, fonts: [`italic 400 20px ${F.inst}`, `400 20px ${F.inst}`, `400 20px ${F.mono}`, `500 20px ${F.mono}`, `500 20px ${F.plex}`, `700 20px ${F.plex}`, `400 20px ${F.serif}`, `700 20px ${F.serif}`] },
-  doodle: { draw: drawDoodle, fonts: [`800 20px ${F.snig}`, `20px ${F.hand}`, `20px ${F.jua}`, `700 20px ${F.gaegu}`] }
+  doodle: { draw: drawDoodle, fonts: [`800 20px ${F.snig}`, `20px ${F.hand}`, `20px ${F.ssro}`] }
 };
 
 function drawPoster(ctx, scale) {
