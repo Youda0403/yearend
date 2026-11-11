@@ -150,6 +150,8 @@ canvas.poster{width:100%;height:auto;display:block;aspect-ratio:2/3;background:#
         <button class="theme" data-theme="noir"><div class="sw noir">Review</div><b>NOIR</b><small>블랙 필름 시트</small></button>
         <button class="theme" data-theme="doodle"><div class="sw doodle">2026</div><b>DOODLE</b><small>패턴 종이 두들</small></button>
       </div>
+      <div class="field"><label>LAYOUT <small>포스터 방향</small></label><div class="seg" id="orient"><button data-o="portrait">PORTRAIT 세로</button><button data-o="landscape">LANDSCAPE 가로</button></div></div>
+      <p class="note" id="orientNote"></p>
     </div>
 
     <div class="card" id="monthCard">
@@ -202,7 +204,7 @@ canvas.poster{width:100%;height:auto;display:block;aspect-ratio:2/3;background:#
 
   <section class="preview">
     <div class="stage"><div class="cvbox" id="cvBox"><canvas class="poster" id="cv" width="600" height="900"></canvas></div></div>
-    <div class="pmeta"><span>2400 × 3600 PX</span><span id="countLabel"></span></div>
+    <div class="pmeta"><span id="sizeLabel">2400 × 3600 PX</span><span id="countLabel"></span></div>
   </section>
 </main>
 
@@ -231,7 +233,9 @@ canvas.poster{width:100%;height:auto;display:block;aspect-ratio:2/3;background:#
 <script>
 (() => {
 'use strict';
-const W = 1200, H = 1800, EXPORT_SCALE = 2;
+let W = 1200, H = 1800;
+const EXPORT_SCALE = 2;
+function setDims() { const ls = state.orient === 'landscape'; W = ls ? 1800 : 1200; H = ls ? 1200 : 1800; }
 const MON = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
 const MONTH = ['JANUARY','FEBRUARY','MARCH','APRIL','MAY','JUNE','JULY','AUGUST','SEPTEMBER','OCTOBER','NOVEMBER','DECEMBER'];
 const PASTEL = ['#FFC2D4','#FFD3B5','#FFE7A3','#DDF3AE','#B5EBD4','#ADE3F2','#B8CFFF','#CDC2FF','#E5C2FF','#FFC2EC','#FFCFDD','#CFDCFF'];
@@ -251,7 +255,7 @@ const F = {
 const $ = s => document.querySelector(s);
 const pad2 = n => String(n).padStart(2, '0');
 const defMonth = () => ({ type: 'empty', title: '', body: '', zoom: 1, px: 50, py: 50 });
-const defState = () => ({ name: '', subject: '', year: String(new Date().getFullYear()), headline: '', comment: '', footer: '', theme: 'swiss', cur: 0, months: Array.from({ length: 12 }, defMonth) });
+const defState = () => ({ name: '', subject: '', year: String(new Date().getFullYear()), headline: '', comment: '', footer: '', theme: 'swiss', orient: 'portrait', cur: 0, months: Array.from({ length: 12 }, defMonth) });
 const OLD_THEME = { gallery: 'swiss', cinema: 'noir', pastel: 'doodle', pop: 'doodle', diary: 'doodle' };
 
 let state = defState();
@@ -340,6 +344,7 @@ async function loadAll() {
       for (const k of ['name', 'subject', 'year', 'headline', 'comment', 'footer']) if (typeof s[k] === 'string') base[k] = s[k];
       const th = OLD_THEME[s.theme] || s.theme;
       if (THEMES[th]) base.theme = th;
+      if (s.orient === 'landscape') base.orient = 'landscape';
       if (Number.isInteger(s.cur) && s.cur >= 0 && s.cur < 12) base.cur = s.cur;
       if (Array.isArray(s.months)) base.months = base.months.map((d, i) => Object.assign(d, s.months[i] || {}));
       state = base;
@@ -540,51 +545,30 @@ function blob(ctx, x, y, r, rgb, a) {
 
 /* ---------- 테마 1: SWISS ---------- */
 function drawSwiss(ctx) {
-  const ink = '#111111', acc = '#E63B1F', paper = '#EDE9E0', M = 72, IW = W - M * 2;
+  const LS = W > H, ink = '#111111', acc = '#E63B1F', paper = '#EDE9E0', M = LS ? 64 : 72, IW = W - M * 2;
   ctx.fillStyle = paper; ctx.fillRect(0, 0, W, H);
   grain(ctx, 0.08);
+  const ty = LS ? 76 : 92;
   ctx.textBaseline = 'alphabetic'; ctx.fillStyle = ink;
   ctx.font = `700 17px ${F.inter}`;
-  spaced(ctx, 'ANNUAL REVIEW', M, 92, 3, 'left');
-  spaced(ctx, 'JAN — DEC', W / 2, 92, 3, 'center');
-  spaced(ctx, 'VOL. ' + yr(), W - M, 92, 3, 'right');
-  hline(ctx, M, 114, W - M, 4, ink);
+  spaced(ctx, 'ANNUAL REVIEW', M, ty, 3, 'left');
+  spaced(ctx, 'JAN — DEC', W / 2, ty, 3, 'center');
+  spaced(ctx, 'VOL. ' + yr(), W - M, ty, 3, 'right');
+  hline(ctx, M, ty + 22, W - M, 4, ink);
 
-  // 큰 연도
-  const d = fitDisplay(ctx, yr(), s => `${s}px ${F.anton}`, IW - 240, 310, 480);
-  ctx.textAlign = 'left'; ctx.fillStyle = ink;
-  ctx.fillText(yr(), M - 4, 146 + d.asc);
-  // 빨간 원 스티커
-  const cx = W - M - 104, cy = 300;
-  ctx.beginPath(); ctx.arc(cx, cy, 104, 0, Math.PI * 2); ctx.fillStyle = acc; ctx.fill();
-  ctx.save(); ctx.fillStyle = paper; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.font = `92px ${F.anton}`; ctx.fillText(pad2(count()), cx, cy - 18);
-  ctx.font = `700 15px ${F.inter}`; ctx.textBaseline = 'alphabetic';
-  spaced(ctx, 'OF 12 MONTHS', cx, cy + 44, 2.5, 'center');
-  ctx.restore();
-
-  // 헤드라인 + 한글 제목
-  const hd = headText('YEAR IN REVIEW').toUpperCase();
-  // 소감이 없으면 제목 줄을 연도와 구분선 사이 가운데로 내림
-  const hy = state.comment.trim() ? 528 : 543;
-  ctx.fillStyle = acc; ctx.textAlign = 'left';
-  fitFont(ctx, hd, IW * 0.62, s => `800 ${s}px ${F.inter}`, 52, 24);
-  ctx.fillText(hd, M, hy);
-  const hw = ctx.measureText(hd).width;
-  ctx.fillStyle = ink; ctx.textAlign = 'right'; ctx.font = `600 24px ${F.plex}`;
-  ctx.fillText(ellipsize(ctx, titleText(), IW - hw - 36), W - M, hy);
-  if (state.comment.trim()) {
-    ctx.textAlign = 'left'; ctx.font = `400 20px ${F.plex}`; ctx.fillStyle = '#5c574e';
-    ctx.fillText(ellipsize(ctx, state.comment.trim(), IW), M, 566);
-  }
-  hline(ctx, M, 592, W - M, 1.5, ink);
-
-  // 4 × 3 격자
-  const top = 614, bottom = 1664, gap = 18, labelH = 40;
-  const cw = (IW - gap * 3) / 4, rh = (bottom - top - gap * 2) / 3, fh = rh - labelH;
-  for (let i = 0; i < 12; i++) {
-    const c = i % 4, r = Math.floor(i / 4), x = M + c * (cw + gap), y = top + r * (rh + gap);
-    const cell = cellOf(i);
+  // 빨간 원 스티커 (r = 104 기준으로 비례)
+  const badge = (cx, cy, r) => {
+    const k = r / 104;
+    ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fillStyle = acc; ctx.fill();
+    ctx.save(); ctx.fillStyle = paper; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.font = `${92 * k}px ${F.anton}`; ctx.fillText(pad2(count()), cx, cy - 18 * k);
+    ctx.font = `700 ${Math.max(11, 15 * k)}px ${F.inter}`; ctx.textBaseline = 'alphabetic';
+    spaced(ctx, 'OF 12 MONTHS', cx, cy + 44 * k, 2.5 * k, 'center');
+    ctx.restore();
+  };
+  // 월 칸 하나 (칸 + 아래 라벨)
+  const cellAt = (i, x, y, cw, rh) => {
+    const fh = rh - 40, cell = cellOf(i);
     if (cell.kind === 'image') {
       drawCover(ctx, cell.img, x, y, cw, fh, cell.m, 0);
     } else if (cell.kind === 'text') {
@@ -593,7 +577,7 @@ function drawSwiss(ctx) {
       textCell(ctx, { x, y, w: cw, h: fh }, cell.m, { pad: 20, padTop: 46, align: 'left', valign: 'top', tSize: 23, bSize: 15, lh: 1.62, tFont: s => `700 ${s}px ${F.plex}`, bFont: s => `400 ${s}px ${F.plex}`, tColor: '#F3EFE6', bColor: '#cbc5b9' });
     } else {
       ctx.fillStyle = '#E0DACD'; ctx.fillRect(x, y, cw, fh);
-      ctx.save(); ctx.font = `150px ${F.anton}`; ctx.fillStyle = '#CFC7B6'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(pad2(i + 1), x + cw / 2, y + fh / 2 + 8); ctx.restore();
+      ctx.save(); ctx.font = `${Math.min(150, fh * 0.62)}px ${F.anton}`; ctx.fillStyle = '#CFC7B6'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(pad2(i + 1), x + cw / 2, y + fh / 2 + 8); ctx.restore();
     }
     const ly = y + fh + 28;
     ctx.textAlign = 'left'; ctx.fillStyle = acc; ctx.font = `22px ${F.anton}`;
@@ -605,56 +589,108 @@ function drawSwiss(ctx) {
       ctx.textAlign = 'right'; ctx.font = `500 14px ${F.plex}`; ctx.fillStyle = '#55504a';
       ctx.fillText(ellipsize(ctx, cell.m.title.trim(), cw - 32 - mw - 14), x + cw, ly - 1);
     }
+  };
+  const hd = headText('YEAR IN REVIEW').toUpperCase(), hasC = !!state.comment.trim();
+
+  if (!LS) {
+    // 세로: 큰 연도 + 원, 아래에 4 × 3 격자
+    const d = fitDisplay(ctx, yr(), s => `${s}px ${F.anton}`, IW - 240, 310, 480);
+    ctx.textAlign = 'left'; ctx.fillStyle = ink;
+    ctx.fillText(yr(), M - 4, 146 + d.asc);
+    badge(W - M - 104, 300, 104);
+    // 소감이 없으면 제목 줄을 연도와 구분선 사이 가운데로 내림
+    const hy = hasC ? 528 : 543;
+    ctx.fillStyle = acc; ctx.textAlign = 'left';
+    fitFont(ctx, hd, IW * 0.62, s => `800 ${s}px ${F.inter}`, 52, 24);
+    ctx.fillText(hd, M, hy);
+    const hw = ctx.measureText(hd).width;
+    ctx.fillStyle = ink; ctx.textAlign = 'right'; ctx.font = `600 24px ${F.plex}`;
+    ctx.fillText(ellipsize(ctx, titleText(), IW - hw - 36), W - M, hy);
+    if (hasC) {
+      ctx.textAlign = 'left'; ctx.font = `400 20px ${F.plex}`; ctx.fillStyle = '#5c574e';
+      ctx.fillText(ellipsize(ctx, state.comment.trim(), IW), M, 566);
+    }
+    hline(ctx, M, 592, W - M, 1.5, ink);
+    const top = 614, bottom = 1664, gap = 18;
+    const cw = (IW - gap * 3) / 4, rh = (bottom - top - gap * 2) / 3;
+    for (let i = 0; i < 12; i++) cellAt(i, M + (i % 4) * (cw + gap), top + Math.floor(i / 4) * (rh + gap), cw, rh);
+  } else {
+    // 가로: 왼쪽에 두 줄로 쌓은 연도와 제목, 오른쪽에 3 × 4 격자(가로로 넓은 칸)
+    const LW = 540, top = 124, bottom = 1090, gap = 18;
+    const y4 = yr(), lines = y4.length === 4 ? [y4.slice(0, 2), y4.slice(2)] : [y4];
+    let fs = 900;
+    lines.forEach(t => { fs = Math.min(fs, fitDisplay(ctx, t, s => `${s}px ${F.anton}`, LW - 110, lines.length === 2 ? 372 : 420, 620).s); });
+    ctx.font = `${fs}px ${F.anton}`; ctx.textAlign = 'left'; ctx.fillStyle = ink;
+    const asc = ctx.measureText('0').actualBoundingBoxAscent || fs * 0.75;
+    let dw = 0;
+    lines.forEach((t, k) => { ctx.fillText(t, M - 4, top + asc + k * (asc + 18)); dw = Math.max(dw, ctx.measureText(t).width); });
+    badge(Math.min(M + LW - 80, M - 4 + dw + 58), lines.length === 2 ? top + asc + 9 : top + asc - 80, 80);
+
+    hline(ctx, M, 912, M + LW, 1.5, ink);
+    const by = hasC ? 966 : 990;
+    ctx.fillStyle = acc; ctx.textAlign = 'left';
+    fitFont(ctx, hd, LW, s => `800 ${s}px ${F.inter}`, 50, 24);
+    ctx.fillText(hd, M, by);
+    ctx.fillStyle = ink; ctx.font = `600 24px ${F.plex}`;
+    ctx.fillText(ellipsize(ctx, titleText(), LW), M, by + 42);
+    if (hasC) {
+      ctx.font = `400 20px ${F.plex}`; ctx.fillStyle = '#5c574e';
+      ctx.fillText(ellipsize(ctx, state.comment.trim(), LW), M, by + 78);
+    }
+    const gx0 = M + LW + 44, cw = (W - M - gx0 - gap * 2) / 3, rh = (bottom - top - gap * 3) / 4;
+    for (let i = 0; i < 12; i++) cellAt(i, gx0 + (i % 3) * (cw + gap), top + Math.floor(i / 3) * (rh + gap), cw, rh);
   }
 
-  hline(ctx, M, 1692, W - M, 4, ink);
+  const fy = LS ? 1112 : 1692;
+  hline(ctx, M, fy, W - M, 4, ink);
   ctx.fillStyle = ink; ctx.textAlign = 'left'; ctx.font = `700 24px ${F.plex}`;
-  ctx.fillText(ellipsize(ctx, nameText(), 360), M, 1740);
+  ctx.fillText(ellipsize(ctx, nameText(), 360), M, fy + 48);
   ctx.font = `700 14px ${F.inter}`;
-  spaced(ctx, `YEAR-END REVIEW ${yr()}`, W / 2, 1738, 3, 'center');
+  spaced(ctx, `YEAR-END REVIEW ${yr()}`, W / 2, fy + 46, 3, 'center');
   if (state.footer.trim()) {
     ctx.textAlign = 'right'; ctx.font = `500 20px ${F.plex}`;
-    ctx.fillText(ellipsize(ctx, state.footer.trim(), 360), W - M, 1740);
+    ctx.fillText(ellipsize(ctx, state.footer.trim(), 360), W - M, fy + 48);
   } else {
-    ctx.fillStyle = acc; ctx.fillRect(W - M - 44, 1722, 44, 22);
+    ctx.fillStyle = acc; ctx.fillRect(W - M - 44, fy + 30, 44, 22);
   }
 }
 
 /* ---------- 테마 2: NOIR ---------- */
 function drawNoir(ctx) {
-  const cream = '#EFE7D6', lime = '#D4F23A', mute = '#BDB6A8', SX = 60, SW = 1080;
+  const LS = W > H, cream = '#EFE7D6', lime = '#D4F23A', mute = '#BDB6A8', SX = 60, SW = W - 120;
   ctx.fillStyle = '#171614'; ctx.fillRect(0, 0, W, H);
+  const ty = LS ? 72 : 86;
   ctx.textBaseline = 'alphabetic';
   ctx.fillStyle = lime; ctx.font = `500 15px ${F.mono}`;
-  spaced(ctx, 'REEL ' + yr(), SX, 86, 3, 'left');
-  spaced(ctx, 'A YEAR IN TWELVE FRAMES', W / 2, 86, 3, 'center');
-  spaced(ctx, `${pad2(count())} / 12 EXPOSED`, SX + SW, 86, 3, 'right');
-  hline(ctx, SX, 108, SX + SW, 1, 'rgba(239,231,214,.45)');
+  spaced(ctx, 'REEL ' + yr(), SX, ty, 3, 'left');
+  spaced(ctx, 'A YEAR IN TWELVE FRAMES', W / 2, ty, 3, 'center');
+  spaced(ctx, `${pad2(count())} / 12 EXPOSED`, SX + SW, ty, 3, 'right');
+  hline(ctx, SX, ty + 22, SX + SW, 1, 'rgba(239,231,214,.45)');
 
   // 헤드라인(이탤릭 세리프) + 연도(라임)
   const hd = headText('Year in Review'), yt = ' ' + yr();
-  let s = 190, w1 = 0, w2 = 0;
+  let s = LS ? 140 : 190, w1 = 0, w2 = 0;
   for (; s >= 60; s -= 4) {
     ctx.font = `italic 400 ${s}px ${F.inst}`; w1 = ctx.measureText(hd).width;
     ctx.font = `400 ${s}px ${F.inst}`; w2 = ctx.measureText(yt).width;
     if (w1 + w2 <= W - 140) break;
   }
-  const hx = (W - (w1 + w2)) / 2, hy = 262;
+  const hx = (W - (w1 + w2)) / 2, hy = LS ? 214 : 262;
   ctx.textAlign = 'left';
   ctx.font = `italic 400 ${s}px ${F.inst}`; ctx.fillStyle = cream; ctx.fillText(hd, hx, hy);
   ctx.font = `400 ${s}px ${F.inst}`; ctx.fillStyle = lime; ctx.fillText(yt, hx + w1, hy);
 
   ctx.textAlign = 'center'; ctx.fillStyle = cream; ctx.font = `500 26px ${F.plex}`;
-  ctx.fillText(ellipsize(ctx, titleText(), W - 160), W / 2, 328);
+  ctx.fillText(ellipsize(ctx, titleText(), W - 160), W / 2, hy + (LS ? 54 : 66));
   if (state.comment.trim()) {
     ctx.font = `400 21px ${F.serif}`; ctx.fillStyle = mute;
-    ctx.fillText(ellipsize(ctx, state.comment.trim(), W - 160), W / 2, 370);
+    ctx.fillText(ellipsize(ctx, state.comment.trim(), W - 160), W / 2, hy + (LS ? 92 : 108));
   }
 
-  // 필름 스트립 4줄
-  const top = 414, bottom = 1648, gap = 22, band = 44;
-  const sh = (bottom - top - gap * 3) / 4, fh = sh - band * 2, fw = (SW - 36 - 28) / 3;
-  for (let r = 0; r < 4; r++) {
+  // 필름 스트립: 세로는 4줄 × 3컷(가로로 넓은 컷), 가로는 2줄 × 6컷(세로로 긴 컷)
+  const top = LS ? 336 : 414, bottom = LS ? 1076 : 1648, gap = 22, band = 44, R = LS ? 2 : 4, C = LS ? 6 : 3;
+  const sh = (bottom - top - gap * (R - 1)) / R, fh = sh - band * 2, fw = (SW - 36 - 14 * (C - 1)) / C;
+  for (let r = 0; r < R; r++) {
     const sy = top + r * (sh + gap);
     ctx.fillStyle = '#3A3733'; ctx.fillRect(SX, sy, SW, sh);
     ctx.fillStyle = '#171614';
@@ -664,15 +700,15 @@ function drawNoir(ctx) {
     }
     ctx.font = `400 13px ${F.mono}`; ctx.fillStyle = 'rgba(212,242,58,.85)'; ctx.textAlign = 'left';
     ctx.fillText('SAFETY FILM', SX + 18, sy + 37);
-    for (let c = 0; c < 3; c++) {
-      const i = r * 3 + c, fx = SX + 18 + c * (fw + 14), fy = sy + band;
+    for (let c = 0; c < C; c++) {
+      const i = r * C + c, fx = SX + 18 + c * (fw + 14), fy = sy + band;
       const cell = cellOf(i);
       ctx.fillStyle = cell.kind === 'text' ? '#24221F' : '#1B1A18'; ctx.fillRect(fx, fy, fw, fh);
       if (cell.kind === 'image') {
         drawCover(ctx, cell.img, fx, fy, fw, fh, cell.m, 0);
       } else if (cell.kind === 'text') {
         ctx.save(); ctx.strokeStyle = 'rgba(239,231,214,.6)'; ctx.lineWidth = 1.2; ctx.strokeRect(fx + 10, fy + 10, fw - 20, fh - 20); ctx.restore();
-        textCell(ctx, { x: fx, y: fy, w: fw, h: fh }, cell.m, { pad: 28, align: 'center', valign: 'middle', tSize: 24, bSize: 15.5, lh: 1.6, tFont: s2 => `700 ${s2}px ${F.serif}`, bFont: s2 => `400 ${s2}px ${F.serif}`, tColor: cream, bColor: '#d2c9b8' });
+        textCell(ctx, { x: fx, y: fy, w: fw, h: fh }, cell.m, { pad: LS ? 24 : 28, align: 'center', valign: 'middle', tSize: 24, bSize: 15.5, lh: 1.6, tFont: s2 => `700 ${s2}px ${F.serif}`, bFont: s2 => `400 ${s2}px ${F.serif}`, tColor: cream, bColor: '#d2c9b8' });
       } else {
         ctx.save(); ctx.font = `italic 400 130px ${F.inst}`; ctx.fillStyle = '#5E5950'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(pad2(i + 1), fx + fw / 2, fy + fh / 2 + 4); ctx.restore();
       }
@@ -693,17 +729,18 @@ function drawNoir(ctx) {
   }
   grain(ctx, 0.1);
 
+  const fy = LS ? 1122 : 1704;
   ctx.fillStyle = mute; ctx.font = `400 13px ${F.mono}`;
-  spaced(ctx, 'DIRECTED BY', SX, 1704, 3, 'left');
-  spaced(ctx, 'RUNTIME', W / 2, 1704, 3, 'center');
-  spaced(ctx, 'CREDIT', SX + SW, 1704, 3, 'right');
+  spaced(ctx, 'DIRECTED BY', SX, fy, 3, 'left');
+  spaced(ctx, 'RUNTIME', W / 2, fy, 3, 'center');
+  spaced(ctx, 'CREDIT', SX + SW, fy, 3, 'right');
   ctx.fillStyle = cream;
   ctx.textAlign = 'left'; ctx.font = `700 25px ${F.plex}`;
-  ctx.fillText(ellipsize(ctx, nameText(), 380), SX, 1744);
+  ctx.fillText(ellipsize(ctx, nameText(), 380), SX, fy + 40);
   ctx.textAlign = 'center'; ctx.font = `italic 400 34px ${F.inst}`;
-  ctx.fillText('12 Months', W / 2, 1746);
+  ctx.fillText('12 Months', W / 2, fy + 42);
   ctx.textAlign = 'right'; ctx.font = `500 20px ${F.plex}`;
-  ctx.fillText(ellipsize(ctx, state.footer.trim() || yr(), 380), SX + SW, 1744);
+  ctx.fillText(ellipsize(ctx, state.footer.trim() || yr(), 380), SX + SW, fy + 40);
 }
 
 /* ---------- 테마 3: DOODLE (패턴 종이 + 손그림) ---------- */
@@ -842,7 +879,7 @@ function mixText(c, text, x, y, px, align, maxW) {
 function hline2(c, x1, y1, x2, y2, w, color) { c.save(); c.strokeStyle = color; c.lineWidth = w; c.beginPath(); c.moveTo(x1, y1); c.lineTo(x2, y2); c.stroke(); c.restore(); }
 function drawDoodle(ctx) {
   rnd = seeded(20261111);
-  const ink = '#3E5FA8', red = '#E2554A', M = 78, CX = W / 2;
+  const LS = W > H, ink = '#3E5FA8', red = '#E2554A', M = LS ? 64 : 78;
   const COL = ['#F4A9B8', '#8FB9EC', '#F5D46B', '#A8D58C', '#F2A07B', '#C9B3F0'];
   const ANG = [-0.9, 0.7, -0.5, 0.8, -0.7, 0.5, 0.9, -0.6, 0.6, -0.8, 0.4, -1];
   // 두들(손그림)은 별도 레이어에 그린 뒤 크레파스 질감을 입혀 맨 위에 합침
@@ -854,20 +891,28 @@ function drawDoodle(ctx) {
   };
 
   // 바탕: 패턴 종이 패치워크
-  [[0, 0, 640, 540, 'dots', '#FFF8E6', '#EE7B6E', 42],
-   [640, 0, 560, 540, 'gingham', '#FFFFFF', '#F4AAB0', 34],
-   [0, 540, 420, 600, 'gingham', '#F6FAFF', '#A9CBEF', 30],
-   [420, 540, 780, 600, 'stars', '#FFFFFF', '#F6A09A', 56],
-   [0, 1140, 760, 660, 'gingham', '#FFFCEE', '#F3D26A', 36],
-   [760, 1140, 440, 660, 'dots', '#F4F9FF', '#9CC3EE', 36]]
+  (LS ? [[0, 0, 620, 520, 'dots', '#FFF8E6', '#EE7B6E', 42],
+         [620, 0, 640, 400, 'gingham', '#FFFFFF', '#F4AAB0', 34],
+         [1260, 0, 540, 640, 'stars', '#FFFFFF', '#F6A09A', 56],
+         [0, 520, 620, 680, 'gingham', '#FFFCEE', '#F3D26A', 36],
+         [620, 400, 640, 800, 'gingham', '#F6FAFF', '#A9CBEF', 30],
+         [1260, 640, 540, 560, 'dots', '#F4F9FF', '#9CC3EE', 36]]
+      : [[0, 0, 640, 540, 'dots', '#FFF8E6', '#EE7B6E', 42],
+         [640, 0, 560, 540, 'gingham', '#FFFFFF', '#F4AAB0', 34],
+         [0, 540, 420, 600, 'gingham', '#F6FAFF', '#A9CBEF', 30],
+         [420, 540, 780, 600, 'stars', '#FFFFFF', '#F6A09A', 56],
+         [0, 1140, 760, 660, 'gingham', '#FFFCEE', '#F3D26A', 36],
+         [760, 1140, 440, 660, 'dots', '#F4F9FF', '#9CC3EE', 36]])
     .forEach(p => pat(ctx, ...p));
-  [[0, 540, W, 540], [420, 540, 420, 1140], [0, 1140, W, 1140], [640, 0, 640, 540], [760, 1140, 760, H]]
+  (LS ? [[620, 0, 620, H], [0, 520, 620, 520], [620, 400, 1260, 400], [1260, 0, 1260, H], [1260, 640, W, 640]]
+      : [[0, 540, W, 540], [420, 540, 420, 1140], [0, 1140, W, 1140], [640, 0, 640, 540], [760, 1140, 760, H]])
     .forEach(([x1, y1, x2, y2]) => hline2(ctx, x1, y1, x2, y2, 6, '#FFFFFF'));
 
-  // 머리 라벨
-  const hw = 900, hh = 386, hcy = 66 + hh / 2;
-  both(CX, hcy, -0.8, () => {
-    const p = wobRect(-hw / 2, -hh / 2, hw, hh, 2);
+  // 머리 라벨 (세로: 위쪽 가운데 / 가로: 왼쪽 위)
+  const hp = LS ? { cx: 324, cy: 316, hw: 500, hh: 480, fitW: 420, hs: 84, hy: -92, ys: 104, yy: 30, sy: 0, ty: 112, cm: 156, tw: 430 }
+                : { cx: W / 2, cy: 259, hw: 900, hh: 386, fitW: 720, hs: 118, hy: -44, ys: 70, yy: 46, sy: 22, ty: 109, cm: 151, tw: 760 };
+  both(hp.cx, hp.cy, -0.8, () => {
+    const hw = hp.hw, hh = hp.hh, p = wobRect(-hw / 2, -hh / 2, hw, hh, 2);
     ctx.save(); ctx.clip(p); pat(ctx, -hw / 2 - 10, -hh / 2 - 10, hw + 20, hh + 20, 'gingham', '#FFFFFF', '#B9DCA0', 18); ctx.restore();
     stitches(L, -hw / 2, -hh / 2, hw / 2, -hh / 2, '#8DBF6E', 24, 22);
     stitches(L, hw / 2, -hh / 2, hw / 2, hh / 2, '#8DBF6E', 24, 22);
@@ -875,35 +920,48 @@ function drawDoodle(ctx) {
     stitches(L, -hw / 2, hh / 2, -hw / 2, -hh / 2, '#8DBF6E', 24, 22);
 
     const hd = headText('Year in Review');
-    fitFont(L, hd, 720, s => `800 ${s}px ${F.snig}`, 118, 48);
+    fitFont(L, hd, hp.fitW, s => `800 ${s}px ${F.snig}`, hp.hs, 40);
     L.textAlign = 'center'; L.textBaseline = 'alphabetic';
-    L.fillStyle = '#F5D46B'; L.fillText(hd, 6, -38);
-    L.fillStyle = red; L.fillText(hd, 0, -44);
+    L.fillStyle = '#F5D46B'; L.fillText(hd, 6, hp.hy + 6);
+    L.fillStyle = red; L.fillText(hd, 0, hp.hy);
 
-    L.font = `800 70px ${F.snig}`; L.fillStyle = ink; L.fillText(yr(), 0, 46);
+    L.font = `800 ${hp.ys}px ${F.snig}`; L.fillStyle = ink; L.fillText(yr(), 0, hp.yy);
     const yw = L.measureText(yr()).width;
-    star(L, -yw / 2 - 40, 22, 16, '#F5D46B'); star(L, yw / 2 + 40, 22, 16, '#F4A9B8');
+    star(L, -yw / 2 - 40, hp.sy, 16, '#F5D46B'); star(L, yw / 2 + 40, hp.sy, 16, '#F4A9B8');
     bow(L, 0, -hh / 2 + 2, 34, red);
 
     ctx.fillStyle = ink; ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic'; ctx.font = `32px ${F.ssro}`;
-    ctx.fillText(ellipsize(ctx, titleText(), 760), 0, 109);
+    ctx.fillText(ellipsize(ctx, titleText(), hp.tw), 0, hp.ty);
     if (state.comment.trim()) {
       ctx.font = `23px ${F.ssro}`; ctx.fillStyle = '#6F7FA8';
-      ctx.fillText(ellipsize(ctx, state.comment.trim(), 760), 0, 151);
+      ctx.fillText(ellipsize(ctx, state.comment.trim(), hp.tw), 0, hp.cm);
     }
   });
-  dStar(L, 172, 96, 50, -0.25, red, '#B83E35', true);
-  dStar(L, 1046, 120, 28, 0.3, '#8FB9EC', ink, false);
-  heartDoodle(L, 128, 426, 34, '#F4A9B8', '#D9748A');
-  flower(L, 1076, 416, 27, 0.3);
-  star(L, 232, 250, 12, '#F5D46B'); star(L, 1110, 250, 10, '#8FB9EC');
-  swirl(L, 1005, 196, 20, '#F09AAE');
+  if (LS) {
+    dStar(L, 92, 92, 42, -0.25, red, '#B83E35', true);
+    dStar(L, 566, 104, 24, 0.3, '#8FB9EC', ink, false);
+    heartDoodle(L, 150, 700, 46, '#F4A9B8', '#D9748A');
+    flower(L, 322, 668, 36, 0.3);
+    dStar(L, 486, 742, 46, 0.2, red, '#B83E35', true);
+    swirl(L, 252, 806, 26, '#F09AAE');
+    dStar(L, 138, 890, 30, -0.2, '#F5D46B', '#C99A1E', false);
+    bow(L, 350, 884, 36, red);
+    flower(L, 512, 918, 27, -0.2);
+    star(L, 232, 622, 12, '#F5D46B'); star(L, 420, 824, 12, '#8FB9EC'); star(L, 84, 792, 10, '#F4A9B8');
+  } else {
+    dStar(L, 172, 96, 50, -0.25, red, '#B83E35', true);
+    dStar(L, 1046, 120, 28, 0.3, '#8FB9EC', ink, false);
+    heartDoodle(L, 128, 426, 34, '#F4A9B8', '#D9748A');
+    flower(L, 1076, 416, 27, 0.3);
+    star(L, 232, 250, 12, '#F5D46B'); star(L, 1110, 250, 10, '#8FB9EC');
+    swirl(L, 1005, 196, 20, '#F09AAE');
+  }
 
-  // 월별 칸 3 × 4
-  const top = 494, bottom = 1622, gx = 28, gy = 30;
-  const cw = (W - M * 2 - gx * 2) / 3, rh = (bottom - top - gy * 3) / 4;
+  // 월별 칸: 세로는 3 × 4(가로로 넓은 칸), 가로는 4 × 3(세로로 긴 칸)
+  const g = LS ? { x0: 624, top: 62, bottom: 1138, cols: 4, rows: 3, gx: 26, gy: 28 } : { x0: M, top: 494, bottom: 1622, cols: 3, rows: 4, gx: 28, gy: 30 };
+  const cw = (W - M - g.x0 - g.gx * (g.cols - 1)) / g.cols, rh = (g.bottom - g.top - g.gy * (g.rows - 1)) / g.rows;
   for (let i = 0; i < 12; i++) {
-    const c = i % 3, r = Math.floor(i / 3), x = M + c * (cw + gx), y = top + r * (rh + gy), cell = cellOf(i);
+    const c = i % g.cols, r = Math.floor(i / g.cols), x = g.x0 + c * (cw + g.gx), y = g.top + r * (rh + g.gy), cell = cellOf(i);
     both(x + cw / 2, y + rh / 2, cell.kind === 'empty' ? 0 : ANG[i], () => {
       const x0 = -cw / 2, y0 = -rh / 2, p = wobRect(x0, y0, cw, rh, 2);
       const ix = x0 + 12, iy = y0 + 12, iw = cw - 24, ih = rh - 12 - 50;
@@ -945,21 +1003,36 @@ function drawDoodle(ctx) {
     });
   }
 
-  // 꼬리 라벨
-  both(CX, 1700, 0.5, () => {
-    const fw = W - M * 2, fh = 92, p = wobRect(-fw / 2, -fh / 2, fw, fh, 2);
-    ctx.fillStyle = '#FFFEF8'; ctx.fill(p);
-    L.save(); L.strokeStyle = ink; L.lineWidth = 3.2; L.stroke(p); L.restore();
-    ctx.fillStyle = ink; ctx.textBaseline = 'middle';
-    ctx.font = `32px ${F.hand}`; ctx.textAlign = 'left'; ctx.fillText('by', -fw / 2 + 32, 2);
-    const bw = ctx.measureText('by ').width;
-    mixText(ctx, nameText(), -fw / 2 + 32 + bw, 2, 32, 'left', 330);
-    if (state.footer.trim()) mixText(ctx, state.footer.trim(), fw / 2 - 32, 2, 30, 'right', 330);
-    ctx.font = `28px ${F.hand}`; ctx.textAlign = 'center';
-    const ct = `${pad2(count())} / 12 filled`, cW = ctx.measureText(ct).width;
-    ctx.fillText(ct, 0, 2);
-    star(L, -cW / 2 - 22, 0, 10, '#F5D46B'); star(L, cW / 2 + 22, 0, 10, '#8FB9EC');
-  });
+  // 꼬리 라벨 (세로: 아래 가로 띠 / 가로: 왼쪽 아래 카드)
+  const ct = `${pad2(count())} / 12 filled`;
+  if (LS) {
+    both(324, 1082, 0.5, () => {
+      const fw = 500, fh = 116, p = wobRect(-fw / 2, -fh / 2, fw, fh, 2), two = !!state.footer.trim(), y1 = two ? -22 : 2;
+      ctx.fillStyle = '#FFFEF8'; ctx.fill(p);
+      L.save(); L.strokeStyle = ink; L.lineWidth = 3.2; L.stroke(p); L.restore();
+      ctx.fillStyle = ink; ctx.textBaseline = 'middle';
+      ctx.font = `32px ${F.hand}`; ctx.textAlign = 'left'; ctx.fillText('by', -fw / 2 + 28, y1);
+      const bw = ctx.measureText('by ').width;
+      mixText(ctx, nameText(), -fw / 2 + 28 + bw, y1, 32, 'left', 230);
+      ctx.font = `26px ${F.hand}`; ctx.textAlign = 'right'; ctx.fillText(ct, fw / 2 - 28, y1);
+      if (two) mixText(ctx, state.footer.trim(), -fw / 2 + 28, 28, 28, 'left', fw - 56);
+    });
+  } else {
+    both(W / 2, 1700, 0.5, () => {
+      const fw = W - M * 2, fh = 92, p = wobRect(-fw / 2, -fh / 2, fw, fh, 2);
+      ctx.fillStyle = '#FFFEF8'; ctx.fill(p);
+      L.save(); L.strokeStyle = ink; L.lineWidth = 3.2; L.stroke(p); L.restore();
+      ctx.fillStyle = ink; ctx.textBaseline = 'middle';
+      ctx.font = `32px ${F.hand}`; ctx.textAlign = 'left'; ctx.fillText('by', -fw / 2 + 32, 2);
+      const bw = ctx.measureText('by ').width;
+      mixText(ctx, nameText(), -fw / 2 + 32 + bw, 2, 32, 'left', 330);
+      if (state.footer.trim()) mixText(ctx, state.footer.trim(), fw / 2 - 32, 2, 30, 'right', 330);
+      ctx.font = `28px ${F.hand}`; ctx.textAlign = 'center';
+      const cW = ctx.measureText(ct).width;
+      ctx.fillText(ct, 0, 2);
+      star(L, -cW / 2 - 22, 0, 10, '#F5D46B'); star(L, cW / 2 + 22, 0, 10, '#8FB9EC');
+    });
+  }
 
   speckle(L);
   ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(lc, 0, 0); ctx.restore();
@@ -973,6 +1046,7 @@ const THEMES = {
 };
 
 function drawPoster(ctx, scale) {
+  setDims();
   SC = scale;
   ctx.setTransform(scale, 0, 0, scale, 0, 0);
   ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
@@ -1007,10 +1081,13 @@ function kickFonts() {
 const cv = $('#cv'), cvBox = $('#cvBox'), cv2 = $('#cv2');
 function paint(canvas, cssW) {
   try {
+    setDims();
+    canvas.style.aspectRatio = `${W} / ${H}`;
     const dpr = window.devicePixelRatio || 1;
     const px = Math.max(300, Math.min(W, Math.round((cssW || 360) * dpr)));
     const scale = px / W;
-    if (canvas.width !== px) { canvas.width = px; canvas.height = Math.round(H * scale); }
+    const ph = Math.round(H * scale);
+    if (canvas.width !== px || canvas.height !== ph) { canvas.width = px; canvas.height = ph; }
     const ctx = canvas.getContext('2d');
     ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, canvas.width, canvas.height);
     drawPoster(ctx, scale);
@@ -1057,7 +1134,16 @@ function updateTitlePreview() { $('#titlePreview').textContent = '포스터에 �
 function fillBasics() { document.querySelectorAll('[data-k]').forEach(el => { el.value = state[el.dataset.k]; }); updateTitlePreview(); }
 
 const themeBtns = document.querySelectorAll('[data-theme]');
-function updateThemes() { themeBtns.forEach(b => b.classList.toggle('on', b.dataset.theme === state.theme)); }
+const CELL_NOTE = { swiss: ['세로로 긴 칸 (4 × 3)', '가로로 넓은 칸 (3 × 4)'], noir: ['가로로 넓은 컷 (3 × 4)', '정사각형에 가까운 컷 (6 × 2)'], doodle: ['가로로 넓은 칸 (3 × 4)', '세로로 긴 칸 (4 × 3)'] };
+function updateThemes() {
+  themeBtns.forEach(b => b.classList.toggle('on', b.dataset.theme === state.theme));
+  const ls = state.orient === 'landscape';
+  document.querySelectorAll('#orient button').forEach(b => b.classList.toggle('on', (b.dataset.o === 'landscape') === ls));
+  $('#orientNote').textContent = '이 조합의 칸 모양: ' + CELL_NOTE[state.theme][ls ? 1 : 0];
+  cvBox.style.maxWidth = ls ? 'none' : '';
+  $('#sizeLabel').textContent = ls ? '3600 × 2400 PX' : '2400 × 3600 PX';
+}
+document.querySelectorAll('#orient button').forEach(b => b.addEventListener('click', () => { state.orient = b.dataset.o; updateThemes(); changed(); }));
 themeBtns.forEach(b => b.addEventListener('click', () => { state.theme = b.dataset.theme; updateThemes(); renderMonthEditor(); changed(); }));
 
 const mType = $('#mType');
@@ -1159,7 +1245,8 @@ $('#mClear').addEventListener('click', async () => {
 $('#resetAll').addEventListener('click', async () => {
   if (!(await ask('RESET ALL', '기본 정보, 12개 칸의 글과 사진을 모두 지울까요? 되돌릴 수 없어요.'))) return;
   const theme = state.theme;
-  state = defState(); state.theme = theme;
+  const orient = state.orient;
+  state = defState(); state.theme = theme; state.orient = orient;
   for (let i = 0; i < 12; i++) { freeImg(i); await store.del('img' + i); }
   fillBasics(); updateThemes(); renderMonthEditor(); updateMonthGrid(); changed();
   toast('초기화했어요');
@@ -1203,6 +1290,7 @@ async function exportPNG() {
   try {
     await loadFonts(fontJob());
     const c = document.createElement('canvas');
+    setDims();
     c.width = W * EXPORT_SCALE; c.height = H * EXPORT_SCALE;
     drawPoster(c.getContext('2d'), EXPORT_SCALE);
     const blobOut = await new Promise(r => c.toBlob(r, 'image/png'));
@@ -1286,6 +1374,7 @@ async function importData(file) {
   for (const k of ['name', 'subject', 'year', 'headline', 'comment', 'footer']) if (typeof s0[k] === 'string') base[k] = s0[k];
   const th = OLD_THEME[s0.theme] || s0.theme;
   if (THEMES[th]) base.theme = th;
+  if (s0.orient === 'landscape') base.orient = 'landscape';
   if (Number.isInteger(s0.cur) && s0.cur >= 0 && s0.cur < 12) base.cur = s0.cur;
   if (Array.isArray(s0.months)) base.months = base.months.map((d, i) => {
     const m = s0.months[i] || {};
