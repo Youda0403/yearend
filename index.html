@@ -193,8 +193,9 @@ canvas.poster{width:100%;height:auto;display:block;aspect-ratio:2/3;background:#
 
     <div class="card">
       <div class="head"><em>04</em><h2>DATA</h2><span>저장</span></div>
-      <p class="note">입력한 내용과 사진은 이 브라우저에 자동 저장돼요. 다른 기기나 브라우저에서는 보이지 않아요.</p>
-      <div><button class="btn warn sm" id="resetAll">RESET ALL</button></div>
+      <p class="note">입력한 내용과 사진은 이 브라우저에 자동 저장돼요. 다른 기기나 브라우저로 옮기려면 EXPORT로 파일을 받아 두고, 그쪽에서 IMPORT로 불러오세요.</p>
+      <div class="mnav"><button class="btn ghost sm" id="dataExport">EXPORT</button><button class="btn ghost sm" id="dataImport">IMPORT</button><button class="btn warn sm" id="resetAll">RESET ALL</button></div>
+      <input type="file" id="importFile" accept=".json,application/json" hidden>
     </div>
   </section>
 
@@ -1228,6 +1229,81 @@ $('#saveDesk').addEventListener('click', exportPNG);
 $('#saveMob').addEventListener('click', exportPNG);
 $('#outClose').addEventListener('click', () => $('#imgModal').classList.remove('on'));
 $('#imgModal').addEventListener('click', e => { if (e.target === $('#imgModal')) $('#imgModal').classList.remove('on'); });
+
+/* ---------- 데이터 내보내기 / 불러오기 ---------- */
+function blobToDataURL(b) { return new Promise((res, rej) => { const f = new FileReader(); f.onload = () => res(f.result); f.onerror = rej; f.readAsDataURL(b); }); }
+function dataURLToBlob(u) {
+  const m = /^data:([^;,]+)?(;base64)?,(.*)$/s.exec(u || '');
+  if (!m) throw new Error('bad image');
+  const bin = m[2] ? atob(m[3]) : decodeURIComponent(m[3]);
+  const arr = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+  return new Blob([arr], { type: m[1] || 'image/png' });
+}
+async function offerFile(blobOut, name) {
+  const p = getDownloads();
+  const ns = p ? await Promise.race([p, new Promise(r => setTimeout(() => r(null), 4000))]) : null;
+  if (ns && typeof ns.save === 'function') {
+    try { await ns.save({ filename: name, data: blobOut }); return 'saved'; }
+    catch (e) {
+      const code = e && e.code;
+      if (code === 'declined') return 'declined';
+      if (code === 'rate_limited') return 'busy';
+    }
+  }
+  const url = URL.createObjectURL(blobOut);
+  const a = document.createElement('a'); a.href = url; a.download = name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 30000);
+  return 'saved';
+}
+async function exportData() {
+  const btn = $('#dataExport'); btn.disabled = true;
+  try {
+    const images = {};
+    for (let i = 0; i < 12; i++) if (imgs[i]) images[i] = await blobToDataURL(imgs[i].blob);
+    const out = JSON.stringify({ app: 'yearend-poster', version: 1, exportedAt: new Date().toISOString(), state, images });
+    const name = `${yr()}_${(state.name.trim() || 'me')}_year-end-data.json`.replace(/[\\/:*?"<>|]/g, '_');
+    const r = await offerFile(new Blob([out], { type: 'application/json' }), name);
+    toast(r === 'declined' ? '내보내기를 취소했어요' : r === 'busy' ? '잠시 후 다시 눌러 주세요' : '데이터 파일을 저장했어요');
+  } catch (e) { toast('내보내지 못했어요'); }
+  finally { btn.disabled = false; }
+}
+async function importData(file) {
+  let data;
+  try { data = JSON.parse(await file.text()); } catch (e) { toast('읽을 수 없는 파일이에요'); return; }
+  if (!data || data.app !== 'yearend-poster' || typeof data.state !== 'object' || !data.state) { toast('연말정산 포스터 데이터 파일이 아니에요'); return; }
+  if (!(await ask('IMPORT', '지금 입력된 내용과 사진을 이 파일의 내용으로 바꿀까요? 되돌릴 수 없어요.'))) return;
+  const s0 = data.state, base = defState();
+  for (const k of ['name', 'subject', 'year', 'headline', 'comment', 'footer']) if (typeof s0[k] === 'string') base[k] = s0[k];
+  const th = OLD_THEME[s0.theme] || s0.theme;
+  if (THEMES[th]) base.theme = th;
+  if (Number.isInteger(s0.cur) && s0.cur >= 0 && s0.cur < 12) base.cur = s0.cur;
+  if (Array.isArray(s0.months)) base.months = base.months.map((d, i) => {
+    const m = s0.months[i] || {};
+    if (['empty', 'image', 'text'].includes(m.type)) d.type = m.type;
+    if (typeof m.title === 'string') d.title = m.title;
+    if (typeof m.body === 'string') d.body = m.body;
+    if (Number.isFinite(m.zoom)) d.zoom = Math.min(3, Math.max(1, m.zoom));
+    if (Number.isFinite(m.px)) d.px = Math.min(100, Math.max(0, m.px));
+    if (Number.isFinite(m.py)) d.py = Math.min(100, Math.max(0, m.py));
+    return d;
+  });
+  let failed = 0;
+  for (let i = 0; i < 12; i++) {
+    freeImg(i); await store.del('img' + i);
+    const u = data.images && data.images[i];
+    if (!u) continue;
+    try { const b = dataURLToBlob(u); imgs[i] = await makeImg(b); await store.set('img' + i, b); }
+    catch (e) { failed++; }
+  }
+  state = base;
+  refreshAll(); scheduleSave();
+  toast(failed ? `불러왔어요 (사진 ${failed}장은 열지 못했어요)` : '불러왔어요');
+}
+$('#dataExport').addEventListener('click', exportData);
+$('#dataImport').addEventListener('click', () => $('#importFile').click());
+$('#importFile').addEventListener('change', e => { const f = e.target.files && e.target.files[0]; e.target.value = ''; if (f) importData(f); });
 
 /* ---------- 시작: 저장소를 기다리지 않고 바로 한 번 그림 ---------- */
 function refreshAll() { fillBasics(); updateThemes(); renderMonthEditor(); updateMonthGrid(); render(); }
