@@ -675,7 +675,17 @@ function drawNoir(ctx) {
     ctx.font = `400 ${s}px ${F.inst}`; w2 = ctx.measureText(yt).width;
     if (w1 + w2 <= W - 140) break;
   }
-  const hx = (W - (w1 + w2)) / 2, hy = LS ? 214 : 262;
+  // 가로형: 제목 덩어리(헤드라인 윗선 ~ 마지막 줄 아랫선)를 위 얇은 선과 필름 사이 정가운데에 둠
+  let hy = 262;
+  if (LS) {
+    ctx.font = `italic 400 ${s}px ${F.inst}`;
+    const asc = ctx.measureText(hd).actualBoundingBoxAscent || s * 0.72;
+    ctx.font = `400 21px ${F.plex}`;
+    const lastOff = state.comment.trim() ? 92 : 54, desc = ctx.measureText('가g').actualBoundingBoxDescent || 6;
+    const lineY = ty + 22, filmTop = 336;
+    hy = lineY + (filmTop - lineY - (asc + lastOff + desc)) / 2 + asc;
+  }
+  const hx = (W - (w1 + w2)) / 2;
   ctx.textAlign = 'left';
   ctx.font = `italic 400 ${s}px ${F.inst}`; ctx.fillStyle = cream; ctx.fillText(hd, hx, hy);
   ctx.font = `400 ${s}px ${F.inst}`; ctx.fillStyle = lime; ctx.fillText(yt, hx + w1, hy);
