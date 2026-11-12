@@ -135,7 +135,7 @@ canvas.poster{width:100%;height:auto;display:block;aspect-ratio:2/3;background:#
       <div class="grid3">
         <div class="field"><label for="fName">NAME <small>누구의</small></label><input type="text" id="fName" data-k="name" placeholder="이름" maxlength="30"></div>
         <div class="field"><label for="fSubject">SUBJECT <small>어떤</small></label><input type="text" id="fSubject" data-k="subject" placeholder="그림, 글…" maxlength="30"></div>
-        <div class="field"><label for="fYear">YEAR</label><input type="text" id="fYear" data-k="year" inputmode="numeric" maxlength="4"></div>
+        <div class="field"><label for="fYear">YEAR</label><input type="text" id="fYear" data-k="year" inputmode="numeric" maxlength="12"></div>
       </div>
       <div class="field"><label for="fHeadline">HEADLINE <small>큰 영문 제목</small></label><input type="text" id="fHeadline" data-k="headline" placeholder="YEAR IN REVIEW" maxlength="28"></div>
       <div class="field"><label for="fComment">COMMENT <small>한 줄 소감</small></label><input type="text" id="fComment" data-k="comment" placeholder="올해를 한 줄로 정리한다면" maxlength="80"></div>
@@ -887,13 +887,16 @@ function mixText(c, text, x, y, px, align, maxW) {
   return c.measureText(t).width;
 }
 function hline2(c, x1, y1, x2, y2, w, color) { c.save(); c.strokeStyle = color; c.lineWidth = w; c.beginPath(); c.moveTo(x1, y1); c.lineTo(x2, y2); c.stroke(); c.restore(); }
+let doodleLayer = null;
 function drawDoodle(ctx) {
   rnd = seeded(20261111);
   const LS = W > H, ink = '#3E5FA8', red = '#E2554A', M = LS ? 64 : 78;
   const COL = ['#F4A9B8', '#8FB9EC', '#F5D46B', '#A8D58C', '#F2A07B', '#C9B3F0'];
   const ANG = [-0.9, 0.7, -0.5, 0.8, -0.7, 0.5, 0.9, -0.6, 0.6, -0.8, 0.4, -1];
   // 두들(손그림)은 별도 레이어에 그린 뒤 크레파스 질감을 입혀 맨 위에 합침
-  const lc = document.createElement('canvas'); lc.width = ctx.canvas.width; lc.height = ctx.canvas.height;
+  if (!doodleLayer) doodleLayer = document.createElement('canvas');
+  const lc = doodleLayer;
+  if (lc.width !== ctx.canvas.width || lc.height !== ctx.canvas.height) { lc.width = ctx.canvas.width; lc.height = ctx.canvas.height; }
   const L = lc.getContext('2d'); L.setTransform(SC, 0, 0, SC, 0, 0); L.lineCap = 'round'; L.lineJoin = 'round';
   const both = (x, y, deg, fn) => {
     for (const c of [ctx, L]) { c.save(); c.translate(x, y); c.rotate(deg * Math.PI / 180); }
@@ -931,7 +934,7 @@ function drawDoodle(ctx) {
     stitches(L, -hw / 2, hh / 2, -hw / 2, -hh / 2, '#8DBF6E', 24, 22);
 
     const hd = headText('Year in Review');
-    fitFont(L, hd, hp.fitW, s => `800 ${s}px ${F.snig}`, hp.hs, 40);
+    fitFont(L, hd, hp.fitW, s => `800 ${s}px ${F.snig}`, hp.hs, 20);
     L.textAlign = 'center'; L.textBaseline = 'alphabetic';
     L.fillStyle = '#F5D46B'; L.fillText(hd, 6, hp.hy + 6);
     L.fillStyle = red; L.fillText(hd, 0, hp.hy);
@@ -1048,6 +1051,7 @@ function drawDoodle(ctx) {
 
   speckle(L);
   ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(lc, 0, 0); ctx.restore();
+  if (SC > 1.01) { lc.width = 0; lc.height = 0; } // 고화질 저장용으로 커진 레이어는 바로 비움
   grain(ctx, 0.05);
 }
 
@@ -1137,7 +1141,7 @@ function changed() { scheduleSave(); scheduleRender(); }
 
 document.querySelectorAll('[data-k]').forEach(el => {
   el.addEventListener('input', () => {
-    state[el.dataset.k] = el.dataset.k === 'year' ? el.value.replace(/[^0-9]/g, '') : el.value;
+    state[el.dataset.k] = el.dataset.k === 'year' ? el.value.replace(/[^0-9]/g, '').slice(0, 4) : el.value;
     if (el.dataset.k === 'year' && el.value !== state.year) el.value = state.year;
     updateTitlePreview(); changed();
   });
@@ -1224,6 +1228,7 @@ async function prepareBlob(file) {
     const g = c.getContext('2d'); g.imageSmoothingQuality = 'high'; g.drawImage(el, 0, 0, c.width, c.height);
     const isPng = file.type === 'image/png';
     const out = await new Promise(r => c.toBlob(r, isPng ? 'image/png' : 'image/jpeg', 0.92));
+    c.width = 0; c.height = 0;
     return out || file;
   } finally { URL.revokeObjectURL(url); }
 }
@@ -1306,6 +1311,7 @@ async function exportPNG() {
     c.width = W * EXPORT_SCALE; c.height = H * EXPORT_SCALE;
     drawPoster(c.getContext('2d'), EXPORT_SCALE);
     const blobOut = await new Promise(r => c.toBlob(r, 'image/png'));
+    c.width = 0; c.height = 0;
     if (!blobOut) throw new Error('toBlob failed');
     const name = `${yr()}_${(state.name.trim() || 'me')}_year-end.png`.replace(/[\\/:*?"<>|]/g, '_');
 
